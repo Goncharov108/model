@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-15T23:15:00.000Z",
+  "modelHint": "Синтез по CANON_PROJECT_MASTER.txt (PDF «Проект Мастер»)",
+  "summary": "Документ «Проект Мастер» переводит замысел в инженерную рамку: собственное ядро приватной многослойной сети с вынесенными сервисами (IAM, fine-grained authZ, хранение, интеграции календарей/файлов/чатов/ботов/локального ИИ). Ключевой тезис — не один OSS-монолит как центр приложения, а composable-стек и доменная модель (subjects, layers, objects, relations, entitlements, consents, reveals, tasks, events, documents, agents, audits). Даны два контура поставки: «быстрый старт» (Next.js, NestJS, Keycloak, OpenFGA, PostgreSQL+RLS, MinIO, Nextcloud, Telegram, Ollama) и «стратегический» (плюс Matrix/Synapse, pgvector, отдельный ingest/AI-сервис, проекции OpenFGA в SQL для read models). HumHub и аналоги позиционируются как спутники и референсы UX, не как ядро домена.",
+  "themes": [
+    {
+      "id": "pm_own_core",
+      "title": "Собственное ядро vs один «движок соцсети»",
+      "rationale": "Мастер — не готовый монолит; ядро в вашем домене с вынесенными системными контурами идентичности, авторизации, хранения и интеграций."
+    },
+    {
+      "id": "pm_quick_start_stack",
+      "title": "Контур «быстрый старт»: Next.js + NestJS + Keycloak + OpenFGA + Postgres RLS + MinIO + Nextcloud + Telegram + Ollama",
+      "rationale": "Цель — рабочая приватная админка, лендинг, инвайты, роли, слои, задачи, календарь, файлы и бот без чрезмерной глубины инфры на старте."
+    },
+    {
+      "id": "pm_strategic_stack",
+      "title": "Стратегический контур: Matrix, pgvector, ingest/AI, проекции OpenFGA→SQL",
+      "rationale": "Расширение до полноценной «соцсети для своих» с комнатами, RAG по своим данным, paid reveal и строгой делегацией для агентов."
+    },
+    {
+      "id": "pm_humhub_satellite",
+      "title": "HumHub/Nextcloud/Matrix не как единственный центр приложения",
+      "rationale": "Их роль — спутники и референсы; ядро остаётся кастомным, чтобы не «ломать чужой продукт» под приватные слои и relation-first доступ."
+    },
+    {
+      "id": "pm_composable_oss",
+      "title": "Composable OSS на пересечении четырёх классов рынка",
+      "rationale": "Корпоративные/community платформы, groupware, федеративные мессенджеры, IAM/AuthZ — выбор не одного продукта, а сборки сильных компонентов."
+    },
+    {
+      "id": "pm_domain_vocabulary",
+      "title": "Доменная лексика ядра",
+      "rationale": "Subjects, layers, objects, relations, entitlements, consents, reveals, tasks, events, documents, agents, audits — якорь для схемы данных и API."
+    },
+    {
+      "id": "pm_keycloak_openfga",
+      "title": "Keycloak как IAM/OIDC; OpenFGA как relation engine",
+      "rationale": "Разделение аутентификации и тонкой авторизации, включая агентные и контекстные сценарии."
+    },
+    {
+      "id": "pm_postgres_rls_pgvector",
+      "title": "PostgreSQL: RLS как система записи + pgvector для RAG",
+      "rationale": "Транзакционный реестр, политики на строках и эмбеддинги рядом с данными для JOIN и контролируемого поиска."
+    },
+    {
+      "id": "pm_minio",
+      "title": "MinIO как S3-совместимое объектное хранилище",
+      "rationale": "Вложения, медиа, архивы, бэкапы и экспорты под self-hosted контур."
+    },
+    {
+      "id": "pm_matrix_optional",
+      "title": "Matrix/Synapse для приватных комнат и power levels",
+      "rationale": "Зрелый контур для комнат с политиками; в стратегическом контуре дополняет Telegram и веб."
+    },
+    {
+      "id": "pm_telegram_ollama",
+      "title": "Telegram Bot API + Ollama",
+      "rationale": "Быстрый capture-поток с мобильных устройств и локальный AI без обязательного выхода во внешние SaaS."
+    },
+    {
+      "id": "pm_two_contours_compatible",
+      "title": "Два контура совместимы по эволюции",
+      "rationale": "Быстрый старт не выбрасывается — доращивается стратегическими компонентами без смены философии архитектуры."
+    }
+  ],
+  "tensions": [
+    "NestJS+Next.js как выбранный быстрый стек vs текущий прототип на Vite в репозитории model/web — потребуется согласование дорожной карты.",
+    "Минимизация самописного кода vs скорость за счёт готовых модулей — где проходит граница «ядра».",
+    "Matrix и E2EE повышают приватность vs операционная сложность для семьи и нетехнических пользователей.",
+    "pgvector и RAG в Postgres vs стоимость хранения эмбеддингов и политики удаления/ретенции.",
+    "Проекции OpenFGA→SQL для read models vs риск рассинхрона с каноническим графом отношений.",
+    "Service accounts Keycloak и обходные пути API vs строгий deny-by-default на RLS."
+  ],
+  "hypotheses": [
+    "МинIO+Nextcloud+Postgres закрывают файлово-календарный контур до глубокой кастомизации UI «Мастера».",
+    "OpenFGA станет единственным местом правды для «reveal» и paid-слоёв, если дисциплинировать tuple-граф.",
+    "Отдельный Python ingest/AI сервис упростит тяжёлые пайплайны без блокировки NestJS API.",
+    "HumHub останется вспомогательным community-слоем или будет выведен, когда кастомный соц-контур созреет.",
+    "Два контура документации (канон-2 архитектурно-философский, канон-3 инженерно-проектный) снизят смешение уровней абстракции в одном файле."
+  ]
+}

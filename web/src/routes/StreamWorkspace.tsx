@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react'
 import { countWords } from '../analysis/text/countWords'
+import bundledCanonProjectMasterV1 from '../data/canonProjectMasterExternalAnalysis.v1.json'
 import bundledCanonSecondaryV1 from '../data/canonSecondaryExternalAnalysis.v1.json'
 import { readTextFile } from '../lib/readTextFile'
 import { formatInt } from '../lib/formatInt'
@@ -222,6 +223,13 @@ export function StreamWorkspace() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-zinc-200">Глубокий анализ (JSON)</h2>
           <div className="flex flex-wrap gap-2">
+            <AppButton
+              type="button"
+              variant="ghost"
+              onClick={() => applyExternalJson(JSON.stringify(bundledCanonProjectMasterV1))}
+            >
+              Проект Мастер (PDF) в слой
+            </AppButton>
             <AppButton
               type="button"
               variant="ghost"

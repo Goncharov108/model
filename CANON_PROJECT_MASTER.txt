@@ -1,0 +1,1766 @@
+Канонический текст №3 (в репозитории)
+=====================================
+Источник: PDF «Проект Мастер.pdf»
+Путь на машине владельца: /Users/mac108/Downloads/Проект Мастер.pdf
+Извлечение текста: автоматически (библиотека pypdf), без ручной вычитки макета.
+
+Назначение: третий по важности опорный текст в репозитории (после SWOD_ZAKONOV.txt, канона-2
+CANON_SECONDARY_MASTER.txt и мастер-намерения в private/). При противоречии — SWOD, затем
+явные указания владельца.
+
+--- Ниже извлечённый текст PDF ---
+
+===== Страница 1 =====
+
+Проект Мастер
+Executive summary
+«Мастер» логичнее проектировать не как один большой «готовый движок соцсети», а как 
+собственное ядро приватной многослойной сети с вынесенными системными сервисами:
+отдельный контур идентификации, отдельный контур fine-grained authorization, отдельный слой
+хранения и отдельные интеграции для календарей, файлов, чатов, ботов и локального ИИ. Такой
+подход лучше соответствует вашему ТЗ: «разные люди видят разную картинку», есть личные,
+семейные, рабочие, клиентские, посёлковые и агентные слои, а также требование self-hosted/on-
+prem и открытого репозитория. Keycloak подходит на роль центра идентичности и OIDC/SSO;
+OpenFGA — на роль relation engine для ReBAC и агентных делегаций; PostgreSQL — как главный
+системный реестр с RLS; Nextcloud — как готовый слой календарей/файлов/групповой работы;
+Matrix/Synapse — как приватный контур чатов/комнат; Ollama — как локальный AI runtime;
+Telegram Bot API — как первый внешне удобный интерфейс. 
+Для быстрого запуска рекомендую стек, который даст рабочую приватную админку, публичный
+лендинг, инвайты, роли, слои, задачи, календарь, файлы и Telegram-бота без чрезмерной
+инфраструктурной глубины. Для стратегического контура рекомендую тот же базовый стек, но с
+добавлением Matrix, отдельного AI/ingest-контура и строгой модели delegated access для клонов/
+агентов. В обоих вариантах архитектура остаётся совместимой: быстрый старт не выбрасывается,
+а доращивается. 
+Контур Рекомендуемый стек Почему это лучший
+компромисс сейчас Источники
+Быстрый старт
+Frontend: Next.js +
+TypeScript. Backend:
+NestJS + TypeScript. IAM:
+Keycloak. AuthZ:
+OpenFGA. DB: PostgreSQL
++ RLS. Storage: MinIO. 
+Groupware: Nextcloud. 
+Bots: Telegram Bot API. AI:
+Ollama.
+Next.js даёт зрелый full-stack
+React framework; NestJS —
+масштабируемый TS backend;
+Keycloak закрывает OIDC/realm/
+client/token exchange/theme/
+vault; OpenFGA даёт ReBAC,
+conditions и agent authorization;
+PostgreSQL даёт native RLS;
+Nextcloud уже умеет Files/
+Calendar/Groupware; Telegram
+— быстрый входной
+интерфейс; Ollama —
+локальный runtime моделей. 
+1
+2
+3
+4
+1
+
+===== Страница 2 =====
+
+Контур Рекомендуемый стек Почему это лучший
+компромисс сейчас Источники
+Стратегический
+Всё из быстрого старта 
+плюс Matrix/Synapse для
+приватных комнат и
+power levels, pgvector для
+RAG по заметкам/почте,
+отдельный Python AI/
+ingest service, локальный
+Bot API server , проекция
+OpenFGA-грантов в SQL
+для быстрых списков и
+RLS-backed read models.
+Это уже полноценная «соцсеть
+для своих» с комнатами,
+агентами, задачами,
+календарями, paid reveal,
+личными и командными
+слоями, RAG по своим данным
+и строгой делегацией доступа.
+Matrix даёт room power levels,
+приватные room presets и self-
+hosted homeserver; pgvector
+позволяет держать embeddings
+рядом с транзакционными
+данными в Postgres. 
+Ключевой вывод: «Мастер» не стоит строить поверх HumHub, Nextcloud или Matrix как
+единственного центра приложения. Их лучше использовать как спутники. Само ядро должно
+принадлежать вашему домену: subjects, layers, objects, relations, entitlements, 
+consents, reveals, tasks, events, documents, agents, audits. Тогда проект
+останется вашим, а не продуктом, который вы «ломаете» под себя. HumHub и Nextcloud полезны
+как референсные продукты и как вспомогательные сервисы, но не как идеальная форма вашего
+основного домена. 
+Анализ рынка OSS решений и выбор оптимального стека
+Рынок open-source решений, близких к вашей идее, распадается не на один класс, а минимум на 
+четыре: корпоративные/community-платформы, groupware-платформы, федеративные
+мессенджеры/соцсети, а также IAM/AuthZ-движки. Ваша постановка задачи находится на
+пересечении всех четырёх: у вас одновременно есть публичный слой, приватные пространства,
+семейно-дружеские социальные связи, клиенты и продажники, задачи, календари, файлы,
+локальный ИИ и агенты. Поэтому лучший результат даёт не «выбрать один продукт», а собрать
+composable-архитектуру из сильных OSS-компонентов. 
+5
+6
+7
+8
+2
+
+===== Страница 3 =====
+
+Платформы социальной и collaborative-части
+Решение Что умеет хорошо Где упрётся именно
+для «Мастера» Вывод для проектаИсточники
+HumHub
+Социальная сеть/
+интранет, users/
+spaces/content/
+modules, REST API,
+JWT SSO, Calendar ,
+Wiki, Tasks, Custom
+Themes, Custom
+Pages.
+Модель
+«пространства +
+модули» сильна
+для intranet/
+community, но
+слабее для вашей
+идеи сверхгибких
+приватных слоёв,
+paid reveal, relation-
+first access,
+агентной
+делегации и
+сложной политики
+«каждый видит
+свою картинку».
+Полезен как
+референс UX и как
+возможный
+временный
+внутренний
+community-layer , но
+не как ядро домена.
+Nextcloud
+Hub
+Files, Talk, Groupware,
+Office, Assistant, Flow;
+self-hosted; акцент
+на контроль данных
+и on-prem.
+Это отличный
+коллаборационный
+workspace, но не
+relation-native
+соцсеть и не
+движок сложной
+видимости по
+объектам.
+Стоит использовать
+как соседний
+сервис для
+календарей,
+файлов, документов
+и, возможно, части
+семейно-
+командного
+groupware.
+Matrix/
+Synapse
+Федерация,
+encryption, VoIP ,
+private rooms, power
+levels, trusted/private
+room presets, self-
+hosted homeserver .
+Прекрасный
+мессенджер/
+комнаты, но не
+полноценное ядро
+задач, слоёв, денег,
+consent и
+объектных
+политик.
+Нужен как
+коммуникационный
+спутник, не как
+главный app core.
+Discourse
+Масштабируемое
+community discussion
+пространство,
+группы/роли, chat/
+DM, темы, знания,
+плагины, self-host/
+data ownership.
+Отличен для
+форумов и
+knowledge
+communities, но не
+для персональной
+CRM жизни,
+приватных
+многослойных
+reveal-моделей и
+relation-движка.
+Хорош как
+публичный
+discussion/
+community-
+сателлит, если
+позже понадобится.
+9
+10
+11
+12
+3
+
+===== Страница 4 =====
+
+Решение Что умеет хорошо Где упрётся именно
+для «Мастера» Вывод для проектаИсточники
+Flarum
+Лёгкий MIT-форум,
+быстрый интерфейс,
+расширяемость.
+Слишком
+форумоцентричен
+и плосок для
+вашей доменной
+модели.
+Не рекомендую как
+core; если нужен
+сверхлёгкий
+публичный форум
+— можно отдельно.
+Mastodon
+Децентрализованная
+социальная сеть на
+ActivityPub,
+автономия сервера,
+moderation by server ,
+open source.
+Ваш проект не про
+микроблогинг и не
+про публичный
+fediverse-first граф.
+Полезен как
+идеологический
+ориентир
+автономии, но не
+как ядро «Мастера».
+IAM и авторизация
+Класс КандидатСильные стороны Практический выводИсточники
+IAM /
+SSO Keycloak
+Open-source IAM; user
+federation; strong
+authentication; user
+management; fine-grained
+authorization; OIDC; client
+registration; token exchange;
+admin REST API; UI theming;
+vault; high-availability guides.
+Лучший выбор для self-
+hosted identity core
+проекта.
+IAM /
+SSO authentik Self-hosted OSS IdP с сильным
+UX и automation/IaC-подачей.
+Хорошая альтернатива,
+но для вашего ТЗ
+Keycloak глубже по
+enterprise-IAM и лучше
+документирован для
+сложных auth-
+сценариев.
+IAM /
+SSO ZITADEL
+Современный identity
+platform-подход, сильное
+позиционирование identity
+infrastructure.
+Тоже достойная
+альтернатива, но в
+вашем случае не даёт
+преимущества, которое
+перевесило бы
+зрелость Keycloak.
+ReBAC/
+AuthZ OpenFGA
+Zanzibar-inspired high-
+performance engine; HTTP/
+gRPC; multiple storage
+backends; conditions;
+contextual tuples; agent
+authorization; task-based
+authorization.
+Оптимальный relation
+engine для «слоёв»,
+делегаций и клонов/
+агентов.
+13
+14
+15
+16
+17
+18
+4
+
+===== Страница 5 =====
+
+Класс КандидатСильные стороны Практический выводИсточники
+ReBAC/
+AuthZ SpiceDB
+Очень сильный по
+consistency, observability и
+operation; self-hosted;
+pluggable storage; CI/CD
+validation.
+Хорош, если сразу
+нужен более тяжёлый
+Zanzibar-контур
+enterprise-уровня; для
+«Мастера» я бы начал с
+OpenFGA как более
+прямого и лёгкого.
+ReBAC/
+AuthZ Ory Keto
+Zanzibar-inspired server ,
+ReBAC, low-latency checks,
+self-host options,
+горизонткальное
+масштабирование.
+Сильный кандидат, но
+OpenFGA сейчас лучше
+соответствует вашему
+сценарию за счёт более
+удобной модели guides
++ conditions + agent
+docs.
+Почему я выбираю именно этот стек
+Для ядра я рекомендую собственное приложение на Next.js + NestJS + PostgreSQL + Keycloak +
+OpenFGA, потому что это лучше всего согласует четыре ваших требования одновременно:
+уникальная многослойная модель доступа, быстрый старт небольшой команды, self-hosted/on-
+prem, и долгий стратегический горизонт. Next.js уже даёт routing, middleware, route handlers,
+server/client rendering и built-in CSS support; NestJS позиционируется как scalable enterprise-grade
+Node.js framework; Keycloak и OpenFGA закрывают IAM и ReBAC как отдельные зрелые сервисы, а
+не как «самописные велосипедные подсистемы». 
+Почему не делать ядро внутри HumHub или Nextcloud: оба решения очень полезны, но оба
+навязывают свою доменную модель. Ваш проект же требует более тонкой модели, где один и тот
+же человек может быть одновременно членом семьи, участником рабочей ветки, клиентом,
+продажником, гостем, агентом конкретной задачи и временно допущенным наблюдателем
+отдельного календаря. Это уже не «роль в системе» в обычном понимании, а пересечение
+ролей, атрибутов, отношений и временных условий. Именно поэтому ядро должно быть
+relation-first, а не page/module-first. 
+Целевая архитектура и спецификация компонентов
+Ниже — рекомендуемая архитектура стратегического уровня. Быстрый старт — это та же схема,
+но без Matrix и с упрощённым AI/ingest-контуром.
+19
+20
+21
+22
+5
+
+===== Страница 6 =====
+
+Компоненты
+Компонент Роль в системеЧто хранит/
+делает Почему именно он Источники
+Next.js
+frontend
+Публичный
+лендинг,
+личный
+кабинет,
+админка, reveal
+flows
+SSR/ISR,
+middleware, route
+handlers, CSS
+support
+Удобен для одного
+frontend-кода на
+публичную и
+приватную часть, с
+быстрым развитием UI.
+NestJS
+backend
+BFF/API,
+orchestration,
+policy
+composition,
+audit
+REST/API
+contracts,
+webhooks, domain
+logic
+Хороший компромисс
+между скоростью
+команды и
+структурностью
+enterprise-backend.
+Keycloak
+IAM, OIDC, SSO,
+service accounts,
+delegated clients
+Users, realms,
+clients, sessions,
+tokens
+Закрывает auth-часть
+зрелым OSS-решением,
+вместо самописной
+аутентификации.
+OpenFGA ReBAC/ABAC
+policy engine
+Relations, tuples,
+conditions,
+contextual tuples,
+agent/task
+authorization
+Это центральный мозг
+fine-grained access.
+Публичный
+пользователь
+Frontend
+Next.js
+Главный
+админ
+и
+свои
+Telegram
+Bot
+Backend
+API
+NestJS
+Keycloak
+OpenFGA
+PostgreSQL
++
+RLS
++
+pgvector
+MinIO
+Nextcloud
+Matrix/Synapse
+Ingest/AI
+Workers
+Ollama
+Obsidian
+Vault
+Adapter
+Email/Notes
+Import
+23
+24
+25
+26
+6
+
+===== Страница 7 =====
+
+Компонент Роль в системеЧто хранит/
+делает Почему именно он Источники
+PostgreSQLSystem of record
+Core entities, task/
+event/doc
+metadata, audit,
+denormalized read
+models
+Native RLS, сильная
+транзакционность,
+удобный backbone для
+кастомного продукта.
+pgvector
+Векторный
+поиск по своим
+данным
+Embeddings
+заметок, писем,
+документов,
+фото-описаний
+Держит RAG рядом с
+транзакционными
+данными и JOIN-ами
+PostgreSQL.
+MinIO Объектное
+хранилище
+Фото, видео,
+вложения,
+архивы, exports,
+backups
+S3-compatible object
+store, self-hosted, high-
+performance.
+Nextcloud Groupware-слой
+Calendars,
+contacts, files,
+office-like
+collaboration
+Уже имеет Calendar/
+Files/Groupware и local
+AI assistant в общей
+платформе.
+Matrix/
+Synapse
+Приватные
+комнаты и
+сообщения
+Rooms, power
+levels, federation-
+ready messaging
+Даёт зрелые
+приватные комнаты и
+детальную room
+moderation/power
+model.
+Telegram
+Bot API
+Первый
+интерфейс
+ввода
+Чат-команды,
+quick capture,
+push alerts
+Самый быстрый путь
+запустить реальное
+ежедневное
+использование.
+Ollama Локальный AI
+runtime
+Generation,
+summarization,
+embeddings через
+локальные
+модели
+Соответствует цели
+local AI и self-hosted
+data boundary.
+Obsidian
+vault
+adapter
+Личный
+knowledge-
+ingest
+Markdown notes,
+links, attachments
+Obsidian полезен как
+личный источник
+данных, но не как
+каноническое
+collaborative-ядро.
+Почему ядро должно оставаться отдельным от Nextcloud и Matrix
+Nextcloud уже умеет Groupware, Calendar , Files и локальный Assistant; Matrix уже умеет private chat,
+encryption и power levels. Но ни один из них не знает ваш главный объект: слой видимости как
+управляемое обещание доступа. В «Мастере» доступ — это не просто ACL к файлу или комнате.
+Это комбинация: кто ты, в каком отношении ты ко мне, к какому слою ты сейчас подключён, какая
+цель допуска, на какой срок, бесплатно или по оплате, через consent или по личному reveal, 
+27
+28
+29
+30
+31
+32
+33
+34
+7
+
+===== Страница 8 =====
+
+человеческий ты пользователь или агент. Это домен вашего собственного backend-а, а не
+внешней платформы. 
+Репозитории и CI/CD
+Ваше требование «frontend и backend отдельно» — правильное. Минимально жизнеспособная
+раскладка — два основных репозитория, плюс один инфраструктурный и один
+документационный как рекомендованное расширение.
+РепозиторийСодержимое Обязателен Почему
+master-
+front
+Next.js app, design system, public
+landing, cabinet, admin UI Да
+Изолированный
+жизненный цикл
+интерфейса
+master-
+back
+NestJS API, domain modules,
+migrations, workers contracts,
+OpenFGA integration
+Да
+Изолированный
+жизненный цикл
+домена и API
+master-
+infra
+Docker Compose/K8s manifests,
+reverse proxy, monitoring,
+secrets templates, backup jobs
+Очень
+желательно
+Чтобы infra не жила «в
+ботинке backend-а»
+master-
+docs
+ADR, threat model, playbooks,
+privacy docs, API reference,
+onboarding docs
+Желательно Это уменьшает хаос по
+мере роста команды
+CI/CD-пайплайн рекомендую таким:
+Практически:
+в master-front: lint, typecheck, unit tests, visual regression, build;
+в master-back: lint, unit/integration tests, migration validation, OpenFGA model tests, RLS
+tests;
+в master-infra: config validation, container scanning, dry-run deploy;
+promotion по окружениям: dev -> staging -> prod;
+schema migration — в том же релизе, но с backward-compatible window;
+policy migration OpenFGA — отдельным шагом, с тестами на samples. OpenFGA прямо
+поддерживает тестирование моделей, а Keycloak поддерживает import/export of realms и
+автоматизацию клиентов. 
+Пример структуры backend-модулей
+master-back/
+  apps/api
+  apps/workers
+  libs/auth
+  libs/access
+35
+Pull
+Request
+Test
+&
+Lint
+Secrets/SAST/Deps
+Build
+Artifacts
+Preview
+Env
+Manual
+Review
+Merge
+to
+main
+DB
+migrations
+Deploy
+to
+staging
+Smoke
+&
+policy
+tests
+Promote
+to
+production
+• 
+• 
+• 
+• 
+• 
+• 
+36
+8
+
+===== Страница 9 =====
+
+libs/audit
+  libs/timeline
+  libs/relations
+  libs/consent
+  libs/billing
+  libs/search
+  libs/integrations/nextcloud
+  libs/integrations/matrix
+  libs/integrations/telegram
+  libs/integrations/ollama
+  prisma-or-sql/
+  migrations/
+  openfga/
+    model.fga
+    fixtures/
+    tests/
+Пример API-контрактов
+Ниже — не «весь API», а каркас интерфейса, который совпадает с вашей логикой слоёв и reveal.
+POST /api/v1/applications
+request:
+email: string
+displayName: string
+intent: enum[guest, friend, family, client, developer, sales]
+note: string
+consent:
+privacyVersion: string
+truthPolicyAccepted: boolean
+response:
+applicationId: string
+status: pending_review
+POST /api/v1/layers/{layerId}/reveal
+request:
+subjectId: string
+revealMode: enum[invite, manual, paid, temporary]
+expiresAt: datetime|null
+scopes:
+- calendar.read
+- tasks.comment
+- files.read
+response:
+revealId: string
+status: active
+9
+
+===== Страница 10 =====
+
+POST /api/v1/agents/{agentId}/task-grants
+request:
+actorUserId: string
+taskId: string
+permissions:
+- note.read
+- summary.write
+expiresAt: datetime
+bindToConversationId: string|null
+response:
+grantId: string
+status: active
+Модель данных и схема прав доступа
+Главная проектная ошибка здесь — пытаться описать всё только «ролями». Для «Мастера» этого 
+недостаточно. Вам нужна четырёхслойная модель контроля доступа:
+RBAC — базовые системные возможности по должности/типу субъекта;
+ABAC — условия: время, статус оплаты, доверительный уровень, согласие, канал,
+устройство, local-network, срок действия;
+ReBAC — отношения: жена, сын, друг, разработчик, клиент, продажник, участник посёлка,
+агент задачи, наблюдатель слоя;
+RLS — последний барьер на уровне базы, чтобы строка физически не уехала не туда. RBAC
+и ABAC как модели доступа описываются в стандартизированном виде NIST; OpenFGA
+специально строится вокруг relationship-based access control, conditions, contextual tuples и
+agent authorization; PostgreSQL даёт native row-level security и default-deny при включении
+RLS без политик. 
+Сущности, которые надо различать
+Класс Что это Пример
+Subject Любой действующий
+субъект
+вы, Дима, Стас, Паша, жена, сын, клиент,
+продажник, агент
+Role Базовая capability-рольroot_admin, admin, editor, member, 
+guest, agent
+Layer Контекст видимости family, work, sales, village, 
+private_spiritual, client_x, public
+Object Конкретный ресурс календарь, задача, документ, фото, заметка,
+ветка проекта
+Relation Отношение субъекта к
+объекту/слою
+owner , member , viewer , editor , sponsor , applicant,
+delegate
+EntitlementДопуск по продукту/
+оплате paid add-on, subscription, trial, grant
+• 
+• 
+• 
+• 
+37
+10
+
+===== Страница 11 =====
+
+Класс Что это Пример
+Consent Осознанное согласие на
+конкретный scope
+согласие на просмотр календаря семьи до даты
+X
+Reveal Операция открытия
+видимости
+вручную открыл слой client_x/reporting
+продажнику
+Базовые роли
+Роль Базовые права Ограничения
+root_admin
+Полный доступ ко всем слоям,
+политикам, аудитам, reveal, revoke, billing
+overrides
+Должен логироваться особенно
+подробно
+core_adminУправление пользователями, слоями,
+объектами в выделенных контурах
+Нет доступа к самым личным
+слоям без явной связи
+dev_admin Доступ к dev/staging, техническим
+метрикам и задачам разработки
+Нет автоматического доступа к
+личным данным
+editor Создаёт/редактирует контент там, где
+назначен Не управляет policy
+member Участник выбранных слоёв Видит только то, куда явно
+включён
+client Клиентские view/reporting/workflowНе видит внутренние личные/
+семейные ветки по дефолту
+sales Воронка, заявка, проектные
+предложения, коммерческие окна
+Не видит приватные бизнес-
+связки без reveal
+agent Ноль постоянных прав; только task-
+scoped grants Всегда sandboxed и expiring
+Базовые слои
+Слой Тип по умолчаниюКому обычно нуженЧто в нём живёт
+public Публичный Все Лендинг, форма
+заявки, манифест
+inner_admin УльтраприватныйТолько вы
+корневые
+настройки, аудит,
+policy-контур
+family Приватный вы, жена, сын
+семейные
+календари, планы,
+документы
+friends Приватный друзья/родня общение, служение,
+общие планы
+11
+
+===== Страница 12 =====
+
+Слой Тип по умолчаниюКому обычно нуженЧто в нём живёт
+work_core Приватный
+рабочий
+вы, Дима, Паша,
+Стас, Лёша по
+необходимости
+roadmap, спринты,
+техзадачи
+client_space:* Полуприватный конкретный клиент
+и ваша команда
+требования,
+статусы, отчёты
+sales_space Ограниченно-
+приватный продажники, вы
+лиды,
+собеседования,
+предложения
+spiritual_practiceУльтраприватныйпо умолчанию
+только вы
+практика, анартхи,
+личный трекинг
+village Community/private-
+public hybrid
+жители посёлка по
+группам доступа
+объявления,
+координация,
+общий календарь
+ER-диаграмма ядра
+Диаграмма отношений доступа
+Принципиальная схема политики
+Рекомендую такой порядок принятия решения:
+Keycloak аутентифицирует субъекта и выпускает токен. 
+Backend вытаскивает базовые роли из токена и локального профиля. 
+has grants
+belongs
+contains
+owns
+relatesreferenced givesreceives
+opens
+has
+delegates
+receivesacts targets
+SUBJECTuuididstringtypestringusernamestringstatus
+SUBJECT_ROLE
+ROLEuuididstringcode
+LAYER_MEMBERSHIP
+LAYERuuididstringcodestringvisibility_defaultuuidowner_subject_id
+OBJECTuuididstringobject_typeuuidlayer_iduuidowner_subject_idstringsensitivity
+OBJECT_RELATIONuuid iduuid subject_iduuid object_idstring relationtimestamptzexpires_at
+CONSENTuuid iduuid subject_idstring scopetimestamptzgranted_attimestamptzrevoked_at
+REVEALuuid iduuid subject_iduuid layer_idstring modetimestamptzexpires_at
+ENTITLEMENT
+TASK_GRANTuuid iduuid agent_iduuid delegated_by_subject_idstring permissions_jsontimestamptzexpires_at
+AGENTuuididstringcodestringkind
+AUDIT_EVENTuuid idstring actionuuid actor_subject_iduuid object_idtimestamptzoccurred_at
+member/viewer/editorпообъектам
+ memberограниченногопрофиля
+ dev_admin/member
+dev_admin/member
+dev_admin/extendeddevzone
+member
+ clientviewer
+taskgrantonly
+Вы:
+root_admin
+inner_admin
+family
+work_core
+sales_space
+village
+spiritual_practice
+Жена
+Сын
+Дима
+Паша
+Стас
+Продажник
+Клиент
+client_space:x
+Клон/агент
+task
+scope
+dev
+tasks
+leads
+and
+offers
+family
+calendar
+practice
+log
+manual
+reveal
+1. 
+2. 
+12
+
+===== Страница 13 =====
+
+OpenFGA отвечает на вопрос вида can subject S do action A on object O? по
+отношениям и условиям. 
+Backend добавляет бизнес-атрибуты: оплата, истечение reveal, consent, trust level, owner
+override. 
+PostgreSQL RLS не отдаёт строку, если даже backend ошибся или был обойдён. 
+Пример Keycloak realm-конфигурации
+Keycloak имеет realms, client registration, token exchange, admin REST API и UI customization; это
+прямо подходит под ваш сценарий нескольких типов клиентов, service accounts для агентов и
+отдельного branded login. 
+{
+"realm": "master",
+"enabled": true,
+"registrationAllowed": false,
+"loginWithEmailAllowed": true,
+"duplicateEmailsAllowed": false,
+"resetPasswordAllowed": true,
+"internationalizationEnabled": true,
+"supportedLocales": ["ru", "en"],
+"defaultLocale": "ru",
+"roles": {
+"realm": [
+{"name": "root_admin"},
+{"name": "core_admin"},
+{"name": "dev_admin"},
+{"name": "member"},
+{"name": "client"},
+{"name": "sales"},
+{"name": "agent"}
+]
+},
+"clients": [
+{
+"clientId": "master-web",
+"publicClient": true,
+"protocol": "openid-connect",
+"redirectUris": ["https://master.example.com/*"],
+"webOrigins": ["https://master.example.com"]
+},
+{
+"clientId": "master-api",
+"bearerOnly": true,
+"protocol": "openid-connect"
+},
+{
+"clientId": "master-agent",
+"serviceAccountsEnabled": true,
+"protocol": "openid-connect",
+"standardFlowEnabled": false,
+3. 
+4. 
+5. 38
+39
+13
+
+===== Страница 14 =====
+
+"directAccessGrantsEnabled": false
+}
+]
+}
+Пример модели OpenFGA
+OpenFGA рекомендует мыслить от объектов и отношений, а не только от ролей; поддерживает
+conditions, contextual tuples и отдельный раздел authorization for agents. Именно это нужно для
+ваших «клонов/агентов», временных доступов и paid reveal. 
+model
+  schema 1.1
+type user
+type agent
+type layer
+  relations
+    define owner: [user]
+    define admin: [user]
+    define member: [user]
+    define viewer: owner or admin or member
+type object
+  relations
+    define parent_layer: [layer]
+    define owner: [user]
+    define editor: [user]
+    define viewer: [user]
+    define can_view: owner or editor or viewer or viewer from parent_layer
+    define can_edit: owner or editor or admin from parent_layer
+type entitlement
+  relations
+    define holder: [user]
+type reveal
+  relations
+    define subject: [user]
+    define target_layer: [layer]
+type task
+  relations
+    define owner: [user]
+    define delegate: [agent with non_expired_grant]
+    define can_read: owner or delegate
+    define can_write: owner or delegate
+condition non_expired_grant(current_time: timestamp, grant_time: timestamp, 
+40
+14
+
+===== Страница 15 =====
+
+grant_duration: duration) {
+  current_time < grant_time + grant_duration
+}
+Пример PostgreSQL RLS
+PostgreSQL явно говорит: после ENABLE ROW LEVEL SECURITY доступ к строкам идёт только
+через политики; если политик нет, работает default-deny. Политики могут быть привязаны к
+командам и ролям, выражения вычисляются построчно. Это делает RLS идеальным «последним
+барьером». 
+ALTERTABLEobjectsENABLEROWLEVELSECURITY;
+ALTERTABLElayer_membershipsENABLEROWLEVELSECURITY;
+ALTERTABLEtask_grantsENABLEROWLEVELSECURITY;
+CREATEPOLICYobjects_select_policy
+ONobjects
+FORSELECT
+USING(
+owner_subject_id= current_setting('app.subject_id', true)::uuid
+ORlayer_idIN(
+SELECTlm.layer_id
+FROMlayer_membershipslm
+WHERElm.subject_id= current_setting('app.subject_id', true)::uuid
+ANDlm.can_view= true
+AND(lm.expires_atISNULLORlm.expires_at> now())
+)
+);
+CREATEPOLICYobjects_update_policy
+ONobjects
+FORUPDATE
+USING(
+owner_subject_id= current_setting('app.subject_id', true)::uuid
+ORidIN(
+SELECTog.object_id
+FROMobject_grants_projectionog
+WHEREog.subject_id= current_setting('app.subject_id', true)::uuid
+ANDog.can_edit= true
+)
+)
+WITHCHECK(
+owner_subject_id= current_setting('app.subject_id', true)::uuid
+ORidIN(
+SELECTog.object_id
+FROMobject_grants_projectionog
+WHEREog.subject_id= current_setting('app.subject_id', true)::uuid
+ANDog.can_edit= true
+41
+15
+
+===== Страница 16 =====
+
+)
+);
+Как совместить OpenFGA и RLS без боли
+Самая практичная схема — не дёргать OpenFGA из каждой SQL-команды. Вместо этого:
+для online-checks используете OpenFGA прямо из backend-а;
+для списков/таблиц/ленты строите projection tables в PostgreSQL
+( object_grants_projection, layer_memberships_effective);
+на них опирается RLS и быстрые списковые запросы;
+при изменении отношений backend пишет и в доменную БД, и в OpenFGA, а projection
+обновляется worker-ом или outbox-пайплайном.
+Это даёт и строгую модель прав, и производительность.
+UX, айдентика и дизайн-код
+У «Мастера» должна быть не типичная корпоративная айдентика, а образ личного центра
+управления реальностью: приватно, тепло, серьёзно, но не стерильно. Визуально это не «CRM
+для отдела продаж» и не «фейсбук-клон», а private operating system. Именно поэтому я бы
+закладывал две визуальные оси: обитель и приборная панель. Первая даёт ощущение людьми
+и близости, вторая — ощущение контроля, слоёв и направленности. Это уже не про «красиво», а
+про то, чтобы интерфейс поддерживал большой поток входящей информации и не разрушал
+внимание. 
+UX-паттерны, которые здесь обязательны
+Сценарий UX-паттерн Как это выглядит
+Публичный
+вход Single-intent landing Только манифест, форма «Оставить заявку» и
+честная privacy/policy
+Доступ «для
+своих» Invite + manual revealПользователь попадает не «в систему
+вообще», а в конкретный слой/набор слоёв
+Платный
+доступ
+Paid reveal, не равный
+общему доверию
+Оплата открывает только коммерческий scope,
+а не всю личную жизнь
+Семейный
+доступ
+Relationship-first
+onboarding
+«Вы член семьи» не значит «видите всё»;
+видимость всё равно по объектам и
+календарям
+Продажник Progressive disclosure
+Сначала вакансия/описание, потом
+коммерческий слой, потом deeper project
+scope
+Агент/клон Zero-trust task box Агент видит только текущую задачу, ровно до
+окончания task grant
+Возврат
+контроля
+One-click revoke + audit
+trail
+Любой reveal, consent или grant снимается в
+один клик и остаётся в журнале
+• 
+• 
+• 
+• 
+16
+
+===== Страница 17 =====
+
+Onboarding, consent и paid reveal
+EDPB в Guidelines 4/2019 по Art. 25 прямо фиксирует design-by-default и design-by-design как
+центральный принцип; W3C WCAG 2.2 требует достаточного контраста текста — минимум 4.5:1
+для обычного текста и 3:1 для крупного. Для «Мастера» это означает: по умолчанию доступ
+закрыт, пользователь видит минимум, а интерфейс не должен манипулировать согласием.
+Формы согласия и reveal не должны маскироваться под «безобидное продолжение». 
+Рекомендуемый onboarding-флоу:
+На экране reveal каждый scope должен быть сформулирован в формате:
+что откроется;
+зачем это нужно;
+кто является владельцем слоя;
+какие действия разрешены;
+на какой срок;
+можно ли отозвать.
+Это особенно важно для семейных, духовных и клиентских данных.
+Айдентика
+Название:Мастер
+Тон: не «стартап-пафос», а «собранный хозяин сложного пространства».
+Слоган публичного контура:
+«Приватное пространство для своих. Слои, доступы, задачи, память, связь.»
+Визуальная палитра
+Фон: глубокий графит #0B1020
+Поверхность: #121A2B
+Поверхность elevated: #182236
+Основной текст: #F4F7FB
+Вторичный текст: #A8B3C7
+Акцент: #5B8CFF
+Акцент тёплый: #D9A441
+Успех: #2CB67D
+Опасность: #EF476F
+Граница: #243049
+Эта палитра позволяет держать серьёзный тёмный interface без кислотной «киберпанковщины»,
+а акцент золото/янтарь может тонко подсвечивать «ручной reveal», персональный статус и
+особые слои. Контраст для основного текста нужно держать не ниже WCAG AA. 
+42
+Landing
+Оставить
+заявку
+Ожидание
+ручного
+решения
+Инвайт
+Первичный
+вход
+через
+Keycloak
+Экран
+доступных
+слоёв
+Consent
+per
+scope
+Личный
+кабинет
+Paid
+reveal
+or
+manual
+reveal
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+43
+17
+
+===== Страница 18 =====
+
+Типографика
+Заголовки: Inter Tight или Manrope
+Основной текст: Inter
+Моноширинный слой: JetBrains Mono
+Логика простая: интерфейс должен выглядеть современно, но не стерильно-банковски. Inter
+даёт читаемость для плотных таблиц, событий и журналов.
+Кнопки и визуальные состояния
+Primary: плотная, широкая, акцентная, с сильным контрастом 
+Secondary: тёмная поверхность + светлая рамка 
+Danger: только для revoke/delete/reveal revoke 
+Ghost: для внутренних навигационных шорткатов 
+Layer chip: компактный индикатор слоя с цветом и иконкой
+Пример design tokens
+:root{
+--bg: #0B1020;
+--surface: #121A2B;
+--surface-elevated: #182236;
+--border: #243049;
+--text-primary: #F4F7FB;
+--text-secondary: #A8B3C7;
+--text-muted: #7C879A;
+--accent: #5B8CFF;
+--accent-strong: #3E73F0;
+--accent-warm: #D9A441;
+--success: #2CB67D;
+--warning: #F4A261;
+--danger: #EF476F;
+--radius-sm: 10px;
+--radius-md: 14px;
+--radius-lg: 20px;
+--shadow-sm: 0 4px16pxrgba(0,0,0,0.18);
+--shadow-md: 0 12px32pxrgba(0,0,0,0.22);
+--space-1: 4px;
+--space-2: 8px;
+--space-3: 12px;
+--space-4: 16px;
+--space-5: 24px;
+--space-6: 32px;
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+18
+
+===== Страница 19 =====
+
+--space-7: 48px;
+}
+Компонентная библиотека
+Компонент Назначение Особенность
+LayerCard Карточка слоя статус доступа, срок, владелец, кнопка
+reveal
+ConsentSheet Согласие на scope честное объяснение, без манипуляций
+RevealTimeline История открытий/
+закрытий доступа кто, когда, на сколько открыл
+RelationBadge Отношение субъекта жена, сын, разработчик, продажник,
+клиент, агент
+TrustMeter Уровень доверия декоративно-пояснительный, не как
+абсолютная власть
+AuditEventRow Журнал событий actor , action, object, layer , timestamp
+LayerSwitcher Переключение картины
+мира
+показывает, в каком контексте
+пользователь сейчас видит систему
+QuickCaptureBarБыстрый захват мысли/
+события
+единая строка ввода для заметки,
+задачи, события
+TaskGrantDialogВыдача task grant агентуscope, expiry, bind to conversation/task
+TimelineCalendarРеальное расписание
+дня
+«во сколько встал / вышел / приехал /
+сделал»
+DevOps, privacy/legal и open-source governance
+Deployment blueprint
+Для self-hosted/on-prem я рекомендую разделённый контур доменов и сервисов:
+master.example.com — frontend;
+api.master.example.com — backend API;
+id.master.example.com — Keycloak;
+fga.master.example.com — OpenFGA;
+files.master.example.com — Nextcloud;
+chat-master.example.net — Synapse/Matrix на отдельном registrable domain, если
+идёте в Matrix web-клиенты и content repository;
+внутренний сегмент для PostgreSQL, MinIO, Ollama, workers.
+Это не эстетика, а безопасность: Synapse прямо предупреждает, что homeserver не стоит хостить
+на домене с другими чувствительными web apps, особенно из-за content repository endpoints и
+XSS-риска; рекомендуется reverse proxy и отдельный домен. Keycloak, в свою очередь, имеет
+отдельный management interface, observability-гайды и vault integration. 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+44
+19
+
+===== Страница 20 =====
+
+Практический деплой:
+старт: Docker Compose на одном железе;
+после первых пользователей: k3s или Talos/Kubernetes на 3 нодах;
+reverse proxy: Caddy или Nginx;
+secrets: SOPS + age или Vault;
+monitoring: Prometheus + Grafana + Loki;
+audit exports: в отдельный write-once bucket;
+object storage: MinIO с versioning и отдельными bucket policies;
+nightly backups: PostgreSQL base backup + WAL, MinIO bucket replication/backup, Keycloak
+realm export, OpenFGA store snapshots, Nextcloud DB+data. MinIO как S3-compatible object
+store и Nextcloud как self-hosted collaboration layer для этого подходят хорошо. 
+Лицензирование и open-source границы
+Поскольку вы хотите, чтобы проект всегда оставался open source, а пользователи
+взаимодействовали с сетью по сети, базовая серверная лицензия AGPL-3.0 для собственного
+core-сервера — наиболее честный выбор. FSF прямо объясняет, что AGPL специально задумана
+для сетевого серверного софта, чтобы публично используемая модифицированная версия
+раскрывала исходный код этой модификации пользователям сервера. При этом сами
+интеграционные SDK, CLI и фронтовые component packages можно выпускать под MIT или
+Apache-2.0, если нужна мягче распространяемость. 
+Здесь есть важный практический нюанс: некоторые соседние компоненты тоже уже живут на
+сильных copyleft-лицензиях. Nextcloud server использует AGPL-3.0, HumHub имеет AGPL-лицензию
+в репозитории, MinIO community edition — AGPLv3. Это не проблема для вашего мировоззрения,
+но это надо осознанно документировать в policy и contributor guide, чтобы потом не возникало
+сюрпризов. 
+Privacy/legal checklist
+Это не индивидуальная юридическая консультация, а проектный compliance checklist для
+первого design-review.
+Область Что сделать в «Мастере»Почему это важно Источники
+Controller/
+processor
+map
+По каждому слою
+определить: кто controller ,
+есть ли joint controllership,
+есть ли processor на стороне
+команды/инфры
+Ваша команда может
+оказаться не просто
+«разработчиками», а
+фактически участниками
+обработки в разных ролях
+Privacy by
+design/
+default
+По умолчанию все
+приватные слои закрыты;
+открытие — только через
+explicit reveal/consent
+Это ядро подхода Art. 25 и
+EDPB 4/2019
+Purpose
+separation
+Семья, работа, посёлок,
+духовная практика,
+клиентские пространства —
+разные purpose buckets
+Иначе быстро возникает
+«тотальная прозрачность без
+границ»
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+45
+46
+47
+48
+49
+50
+20
+
+===== Страница 21 =====
+
+Область Что сделать в «Мастере»Почему это важно Источники
+Data
+minimization
+На публичном лендинге
+собирать только
+минимально нужное для
+заявки
+Публичный вход не должен
+превращаться в «сбор всего
+сразу»
+Sensitive/
+high-risk data
+Личные духовные записи,
+семейные детали, возможно
+данные о здоровье/
+убеждениях — в отдельный
+high-risk контур с отдельным
+DPIA-review
+Эти данные требуют самого
+строгого контура доступа и
+retention
+Consent
+registry
+Версионировать privacy text,
+consent scope, timestamp,
+revocation
+Чтобы было доказуемо, на что
+именно человек согласился
+Right to see/
+export/delete
+Сразу подготовить экспорты
+и удаления по scope, а не
+только «удалить аккаунт»
+Иначе потом будет больно
+делать DSAR/портируемость/
+удаление
+Audit logging
+Кто, что, кому открыл; кто
+что смотрел; кто что
+делегировал агенту
+Это и безопасность, и доверие,
+и разбор инцидентов
+DPIA
+Перед запуском high-risk
+слоёв провести DPIA по
+семейным, духовным и
+агентным сценариям
+Потому что именно там риск
+перепрофилирования и
+лишнего раскрытия
+максимален
+Honest
+privacy policy
+Честно описать стек, зоны
+риска, self-hosted boundary,
+внешние интеграции и
+возможные точки утечки
+Это полностью соответствует
+вашему замыслу «правда
+важнее продающего обмана»
+Что писать в privacy policy честно
+У вас сильная идея: privacy policy должна не уговаривать, а отрезвлять. Это редкий и
+правильный замысел. Но юридически и UX-практически важно, чтобы policy не была
+театральным «назад дороги нет», а была ясным описанием:
+где хранятся данные;
+какие сервисы поднимаются локально;
+какие модули third-party используются;
+какие данные могут попадать в Telegram/почту/внешние webhook-и;
+какие данные никогда не должны уходить в облачные модели;
+как отзывается доступ;
+где смотреть аудит доступа;
+как запросить экспорт/удаление;
+кто отвечает за каждый слой.
+49
+50
+49
+51
+52
+49
+49
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+21
+
+===== Страница 22 =====
+
+С точки зрения EDPB controller/processor guidance это важнее, чем красиво назвать роли. Сначала
+фактическое распределение влияния на цели и средства обработки, потом уже контракты и
+тексты. 
+Roadmap, оценки, риски и открытые вопросы
+Roadmap
+Deliverables и оценки трудозатрат
+Ниже — инженерная оценка, а не обещание срока. Я исхожу из команды 4–5 человек разного
+уровня, без выделенного full-time SRE и без отдельного product designer .
+Фаза Deliverables Оценка
+Архитектурный
+ноль
+ADR, доменная модель, role/layer/object model, threat
+model, repo bootstrap
+1.5–2.0 чел.-
+мес.
+MVP ядра Front/back skeleton, Keycloak, OpenFGA, Postgres schema,
+RLS baseline, landing, заявки, admin basic
+3.0–4.0 чел.-
+мес.
+Слои и контент tasks, notes, events, documents metadata, reveal UI, audit
+log, family/work/client spaces
+2.5–3.5 чел.-
+мес.
+Интеграции Nextcloud, Telegram, file ingest, mail ingest 2.0–3.0 чел.-
+мес.
+Local AI Ollama, embeddings, pgvector , summarization, scoped RAG2.0–3.0 чел.-
+мес.
+Агентный контурservice accounts, task grants, agent policy, audit, safety rails1.5–2.5 чел.-
+мес.
+Hardening monitoring, backups, runbooks, privacy docs, DPIA draft,
+release engineering
+2.0–3.0 чел.-
+мес.
+Итого:
+Быстрый старт MVP: примерно 6–8 чел.-мес.
+Рабочая v1 стратегического уровня: примерно 12–16 чел.-мес.
+Сильная production-ready версия с агентами, RAG и жёстким контуром приватности:
+16–22 чел.-мес.
+48
+2026-06-01
+2026-07-01
+2026-08-01
+2026-09-01
+2026-10-01
+Архитектура, ADR, модель доступа
+Front/back skeleton + Keycloak/OpenFGA
+Публичный лендинг + заявки
+Админка слоёв, ролей, reveal
+Базовые задачи, заметки, audit
+Nextcloud integration
+Telegram bot quick capture
+Family/work/client spaces
+Ingest mail/notes/files
+Ollama + summarization + RAG
+Agent task grants
+DPIA, privacy docs, release
+Monitoring, backups, failover
+Foundation
+MVP
+Collaboration
+Intelligence
+Hardening
+Дорожная карта проекта Мастер
+• 
+• 
+• 
+22
+
+===== Страница 23 =====
+
+Ключевые риски
+Риск Что может пойти не так Как снижать
+Переусложнение модели
+Попытка смоделировать весь
+мир сразу убьёт первую
+версию
+Начать с 6–8 object types и
+6–8 layer types
+Самописный auth без
+дисциплины
+Ошибка в доступах станет
+катастрофой
+Не писать свой IAM; взять
+Keycloak + OpenFGA + RLS
+Смешение личного и
+рабочего
+Люди получат лишнюю
+видимость
+Purpose separation и
+default-deny
+Боты/агенты увидят слишком
+много
+Агентные ключи утекут в «бог-
+режим»
+Только task-scoped grants,
+expiry, bind-to-task
+Matrix/Nextcloud захватят
+домен
+Команда начнёт жить внутри
+готовых продуктов вместо
+core
+Жёстко держать
+канонический домен в 
+master-back
+UX превратится в админский
+ужас
+Слои, роли и reveal
+перегрузят мозг
+Делать relationship-first UX,
+а не policy-first UX
+Юридическая размытость
+ролей команды
+Непонятно, кто controller/
+processor
+Слой-за-слоем
+зафиксировать governance
+Open-source намерение без
+лицензионной дисциплины
+Потом появятся конфликты по
+AGPL/исходникам
+Сразу выбрать policy по
+лицензиям и публикациям
+Открытые вопросы и ограничения
+Есть несколько вещей, которые в этом отчёте намеренно не зафиксированы как окончательное
+решение, потому что они зависят от вашей следующей управленческой итерации, а не от
+техники.
+Вопрос Почему он открыт
+Нужна ли вам полная федерация наружу или
+только self-hosted/private-by-invite Это меняет роль Matrix и публичной части
+Какой процент данных должен жить в
+Nextcloud, а какой — только в вашем coreЭто влияет на UX и объём интеграций
+Хотите ли вы AGPL для всего core, или
+Apache/MIT для части библиотек Это правовая и стратегическая развилка
+Нужен ли платёжный контур уже в MVPЭто меняет billing и paid reveal priority
+Будет ли «посёлок» обслуживаться как
+отдельный tenant Это влияет на multi-tenancy и legal separation
+Какие именно технологии сильнее знакомы
+Диме, Паше, Стасу и Лёше
+Это может локально сместить выбор между
+NestJS и альтернативным backend
+23
+
+===== Страница 24 =====
+
+Вопрос Почему он открыт
+Нужны ли end-to-end encrypted private
+journals внутри ядра, а не только в MatrixЭто серьёзно влияет на search, backup и AI
+Итоговая рекомендация
+Если формулировать максимально прагматично, то оптимальная архитектура для «Мастера»
+выглядит так:
+Собственный core на Next.js + NestJS + PostgreSQL.
+Identity через Keycloak.
+Fine-grained access через OpenFGA.
+Последний барьер доступа через PostgreSQL RLS.
+Файлы/календари/документы через Nextcloud как соседний сервис.
+Комнаты и защищённые коммуникации через Matrix/Synapse.
+Быстрый ежедневный интерфейс через Telegram Bot API.
+Локальный AI через Ollama, embeddings через pgvector.
+Два основных репозиторияmaster-front и master-back, плюс рекомендованные 
+master-infra и master-docs.
+Лицензия core — по умолчанию я рекомендую AGPL-3.0, если вы действительно хотите
+сохранить проект открытым и анти-закрывающимся в сетевом использовании. 
+Это решение не минимально по количеству компонентов, но оно минимально по количеству
+архитектурных тупиков. Именно поэтому я считаю его лучшим для вашего текста, вашей цели
+и вашего горизонта.
+https://github.com/keycloak/keycloak
+https://github.com/keycloak/keycloak
+https://nextcloud.com/
+https://nextcloud.com/
+https://nextjs.org/
+https://nextjs.org/
+https://spec.matrix.org/latest/client-server-api/
+https://spec.matrix.org/latest/client-server-api/
+https://github.com/humhub/humhub
+https://github.com/humhub/humhub
+https://github.com/matrix-org/synapse
+https://github.com/matrix-org/synapse
+https://www.discourse.org/
+https://www.discourse.org/
+https://flarum.org/
+https://flarum.org/
+https://joinmastodon.org/
+https://joinmastodon.org/
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+53
+1 15 25
+2 10 30
+3 4 21 23 53
+5 6 31
+7 8 9 22
+11 44
+12
+13
+14
+24
+
+===== Страница 25 =====
+
+https://goauthentik.io/
+https://goauthentik.io/
+https://zitadel.com/
+https://zitadel.com/
+https://github.com/openfga/openfga
+https://github.com/openfga/openfga
+https://authzed.com/spicedb
+https://authzed.com/spicedb
+https://github.com/ory/keto
+https://github.com/ory/keto
+https://github.com/nestjs/nest
+https://github.com/nestjs/nest
+https://www.postgresql.org/docs/current/ddl-rowsecurity.html
+https://www.postgresql.org/docs/current/ddl-rowsecurity.html
+https://github.com/pgvector/pgvector
+https://github.com/pgvector/pgvector
+https://github.com/minio/minio
+https://github.com/minio/minio
+https://core.telegram.org/bots/api
+https://core.telegram.org/bots/api
+https://ollama.com/
+https://ollama.com/
+https://help.obsidian.md/sync-notes
+https://help.obsidian.md/sync-notes
+https://openfga.dev/docs/modeling/agents
+https://openfga.dev/docs/modeling/agents
+https://csrc.nist.gov/projects/role-based-access-control
+https://csrc.nist.gov/projects/role-based-access-control
+https://www.keycloak.org/guides
+https://www.keycloak.org/guides
+https://openfga.dev/docs/modeling/getting-started
+https://openfga.dev/docs/modeling/getting-started
+https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-42019-
+article-25-data-protection-design-and_en
+https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-42019-article-25-data-protection-design-
+and_en
+https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
+https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
+https://www.gnu.org/licenses/agpl-3.0.en.html
+https://www.gnu.org/licenses/agpl-3.0.en.html
+https://github.com/nextcloud/server
+https://github.com/nextcloud/server
+16
+17
+18 26 36
+19
+20
+24
+27 41 52
+28
+29 45
+32
+33
+34
+35
+37
+38 39
+40
+42 49 50
+43
+46
+47
+25
+
+===== Страница 26 =====
+
+https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-072020-
+concepts-controller-and-processor-gdpr_en
+https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-072020-concepts-controller-and-
+processor-gdpr_en
+48 51
+26
