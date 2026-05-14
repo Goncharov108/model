@@ -10,3 +10,6 @@ web/.vite
 web/.env
 web/.env.*
 !web/.env.example
+
+# Утилиты извлечения PDF (локально, не в Git)
+.venv-pdf/
