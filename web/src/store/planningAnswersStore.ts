@@ -14,6 +14,10 @@ interface PlanningAnswersState {
   answers: Record<string, PlanAnswerValue>
   setOption: (questionId: string, optionId: string | null) => void
   setCustom: (questionId: string, customText: string) => void
+  /** Полная замена ответов (после импорта JSON). */
+  replaceAll: (answers: Record<string, PlanAnswerValue>) => void
+  /** Очистить все ответы. */
+  clearAll: () => void
 }
 
 export const usePlanningAnswersStore = create<PlanningAnswersState>()(
@@ -34,6 +38,8 @@ export const usePlanningAnswersStore = create<PlanningAnswersState>()(
             [questionId]: mergeAnswer(s.answers[questionId], { customText }),
           },
         })),
+      replaceAll: (answers) => set({ answers: { ...answers } }),
+      clearAll: () => set({ answers: {} }),
     }),
     {
       name: 'model-planning-v1',

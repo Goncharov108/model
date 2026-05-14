@@ -1,17 +1,50 @@
 import type { JSX } from 'react'
+import { useState } from 'react'
 import { PlanningQuestionCard } from '../components/planning/PlanningQuestionCard'
 import { PLANNING_QUESTIONNAIRE } from '../data/planningQuestionnaire'
 import type { PlanAnswerValue } from '../domain/planningQuestion'
+import { buildPlanningExport, parsePlanningImport } from '../lib/planningSnapshot'
+import { downloadJson } from '../lib/downloadJson'
 import { usePlanningAnswersStore } from '../store/planningAnswersStore'
+import { AppButton } from '../ui/AppButton'
 
 /** Перманентный опросник плана: ответы сохраняются в localStorage. */
 export function PlanningQuestionnaireWorkspace(): JSX.Element {
   const answers = usePlanningAnswersStore((s) => s.answers)
   const setOption = usePlanningAnswersStore((s) => s.setOption)
   const setCustom = usePlanningAnswersStore((s) => s.setCustom)
+  const replaceAll = usePlanningAnswersStore((s) => s.replaceAll)
+  const clearAll = usePlanningAnswersStore((s) => s.clearAll)
+
+  const [importDraft, setImportDraft] = useState('')
+  const [importError, setImportError] = useState<string | null>(null)
 
   function valueFor(id: string): PlanAnswerValue {
     return answers[id] ?? { optionId: null, customText: '' }
+  }
+
+  function onExport() {
+    const payload = buildPlanningExport(answers)
+    downloadJson(`plan-answers-${Date.now()}.json`, payload)
+    setImportError(null)
+  }
+
+  function onImport() {
+    const res = parsePlanningImport(importDraft)
+    if (!res.ok) {
+      setImportError(res.message)
+      return
+    }
+    replaceAll(res.answers)
+    setImportError(null)
+    setImportDraft('')
+  }
+
+  function onClearAll() {
+    if (window.confirm('Очистить все ответы опросника в этом браузере?')) {
+      clearAll()
+      setImportError(null)
+    }
   }
 
   return (
@@ -24,10 +57,32 @@ export function PlanningQuestionnaireWorkspace(): JSX.Element {
           Вопросы с вариантами
         </h1>
         <p className="max-w-2xl text-pretty text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Отмечай варианты и при необходимости дописывай свой текст. Прогресс не теряется при
-          перезагрузке страницы. Когда заполнишь достаточно — скажи, соберём план реализации по
-          ответам.
+          Ответы хранятся только в этом браузере. Чтобы передать их ассистенту в чат — нажми
+          «Экспорт JSON» и вставь файл или содержимое сюда. Импорт восстанавливает ответы из JSON.
         </p>
+        <div className="flex flex-wrap gap-2 pt-2">
+          <AppButton type="button" onClick={onExport}>
+            Экспорт JSON
+          </AppButton>
+          <AppButton type="button" variant="ghost" onClick={onImport} disabled={!importDraft.trim()}>
+            Импорт JSON
+          </AppButton>
+          <AppButton type="button" variant="danger" onClick={onClearAll}>
+            Очистить ответы
+          </AppButton>
+        </div>
+        <textarea
+          value={importDraft}
+          onChange={(e) => setImportDraft(e.target.value)}
+          spellCheck={false}
+          placeholder='Вставь сюда JSON из файла plan-answers-….json после экспорта'
+          className="min-h-[100px] w-full resize-y rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 font-mono text-xs text-zinc-100 outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/25"
+        />
+        {importError ? (
+          <p className="rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+            {importError}
+          </p>
+        ) : null}
       </header>
 
       <ol className="flex list-decimal flex-col gap-6 pl-5 marker:text-zinc-500">
