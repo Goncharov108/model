@@ -73,4 +73,31 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     sourceHint: 'Промпт: сам поднимай и перезагружай сервер',
     createdAtIso: '2026-05-15T12:00:00.000Z',
   },
+  {
+    id: 'seed-dry-methods',
+    title: 'Повтор алгоритма → отдельный метод',
+    summary:
+      'Если один и тот же алгоритм повторяется больше двух раз — выносить в именованную функцию/метод с кратким описанием.',
+    tags: ['code-quality', 'process'],
+    sourceHint: 'Промпт: правило про повторяющиеся алгоритмы',
+    createdAtIso: '2026-05-15T14:00:00.000Z',
+  },
+  {
+    id: 'seed-deep-analysis-ui',
+    title: 'Глубокий анализ и веб-структуры',
+    summary:
+      'Фундаментальный текст разбираем максимально глубоко (модель/агент); результат — структуры в UI для корректировки и исследования; тот же пайплайн для файлов вроде private/USER_PRIVATE_TEXT.txt.',
+    tags: ['analysis', 'ui', 'research'],
+    sourceHint: 'Промпт: фундаментальный текст и инструменты анализа',
+    createdAtIso: '2026-05-15T14:00:00.000Z',
+  },
+  {
+    id: 'seed-analysis-tooling',
+    title: 'Инструменты анализа в web/src/analysis',
+    summary:
+      'Конвейер runAnalysisPipeline, метрики, блоки, ключевые слова; импорт JSON ExternalAnalysisV1; персистентность zustand persist.',
+    tags: ['analysis', 'architecture'],
+    sourceHint: 'Промпт: создать подходящие инструменты',
+    createdAtIso: '2026-05-15T14:00:00.000Z',
+  },
 ]

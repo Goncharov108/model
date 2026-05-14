@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { DEFAULT_PROMPT_STRUCTURES } from '../data/promptStructureSeeds'
 import type { PromptStructureItem } from '../domain/promptStructure'
+import { newId } from '../lib/newId'
 
 export type { PromptStructureItem } from '../domain/promptStructure'
 
@@ -11,13 +12,6 @@ interface PromptStructuresState {
     item: Omit<PromptStructureItem, 'createdAtIso'> &
       Partial<Pick<PromptStructureItem, 'id' | 'createdAtIso'>>,
   ) => void
-}
-
-function newId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-  return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 export const usePromptStructuresStore = create<PromptStructuresState>((set) => ({
