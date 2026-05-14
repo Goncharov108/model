@@ -207,4 +207,13 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     sourceHint: 'Мастер-текст',
     createdAtIso: '2026-05-15T19:10:00.000Z',
   },
+  {
+    id: 'seed-planning-questionnaire-ui',
+    title: 'Опросник плана (варианты + свой текст)',
+    summary:
+      'Вкладка «План: вопросы» (/plan): перманентный список вопросов с radio и полем «свой вариант», ответы в localStorage (model-planning-v1).',
+    tags: ['ui', 'planning', 'product'],
+    sourceHint: 'Промпт: встроенные списки с вариантами и перманентные вопросы',
+    createdAtIso: '2026-05-15T20:00:00.000Z',
+  },
 ]

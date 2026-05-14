@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { AppShell } from './layouts/AppShell'
+import { PlanningQuestionnaireWorkspace } from './routes/PlanningQuestionnaireWorkspace'
 import { PromptStructuresWorkspace } from './routes/PromptStructuresWorkspace'
 import { StreamWorkspace } from './routes/StreamWorkspace'
 
@@ -10,6 +11,7 @@ export function AppRoutes() {
       <Route element={<AppShell />}>
         <Route path="/" element={<StreamWorkspace />} />
         <Route path="/structures" element={<PromptStructuresWorkspace />} />
+        <Route path="/plan" element={<PlanningQuestionnaireWorkspace />} />
       </Route>
     </Routes>
   )
