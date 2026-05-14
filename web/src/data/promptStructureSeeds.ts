@@ -364,7 +364,7 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     id: 'seed-canon3-own-core',
     title: 'Собственное ядро домена вместо одного «движка соцсети»',
     summary:
-      'Composable OSS: IAM, authZ, хранение и интеграции вынесены; центр приложения — ваша модель слоёв, отношений и раскрытий.',
+      'Модульная сборка OSS: идентичность, авторизация, хранение и интеграции вынесены; центр приложения — ваша модель слоёв, отношений и раскрытий.',
     tags: ['canon3', 'project-master', 'architecture'],
     sourceHint: 'CANON_PROJECT_MASTER.txt',
     createdAtIso: '2026-05-15T23:20:00.000Z',
@@ -382,14 +382,14 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     id: 'seed-canon3-strategic-stack',
     title: 'Стратегический контур: Matrix/Synapse, pgvector, ingest/AI, проекции OpenFGA→SQL',
     summary:
-      'Расширение до комнат, RAG по своим данным, paid reveal и строгой делегации для агентов поверх того же философского ядра.',
+      'Расширение до комнат, поиск по смыслу по своим данным, платное раскрытие слоёв и строгая делегация для агентов поверх того же философского ядра.',
     tags: ['canon3', 'project-master', 'architecture', 'data-model'],
     sourceHint: 'CANON_PROJECT_MASTER.txt',
     createdAtIso: '2026-05-15T23:20:00.000Z',
   },
   {
     id: 'seed-canon3-domain-vocab',
-    title: 'Доменная лексика: subjects, layers, objects, relations, entitlements, consents, reveals…',
+    title: 'Доменный словарь: субъекты, слои, объекты, отношения, полномочия, согласия, раскрытия…',
     summary:
       'Якорь для схемы БД и API: задачи, события, документы, агенты, аудит — единый словарь между каноном-2 и инженерной поставкой.',
     tags: ['canon3', 'project-master', 'ddd', 'data-model'],
@@ -409,7 +409,7 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     id: 'seed-canon3-bundled-json',
     title: 'Встроенный JSON анализа канона-3 («Проект Мастер») в UI',
     summary:
-      'Файл web/src/data/canonProjectMasterExternalAnalysis.v1.json; кнопка «Проект Мастер (PDF) в слой» на «Потоке» импортирует ExternalAnalysisV1.',
+      'Файл web/src/data/canonProjectMasterExternalAnalysis.v1.json; кнопка «Проект Мастер (PDF) в слой» на вкладке «Поток» импортирует ExternalAnalysisV1.',
     tags: ['canon3', 'project-master', 'ui', 'analysis'],
     sourceHint: 'Запрос пользователя: то же, что для канона-2',
     createdAtIso: '2026-05-15T23:20:00.000Z',
