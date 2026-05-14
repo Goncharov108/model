@@ -2,3 +2,11 @@
 # Содержимое private/* (кроме .gitkeep) никогда не коммитить.
 private/*
 !private/.gitkeep
+
+# Frontend (web/)
+web/node_modules
+web/dist
+web/.vite
+web/.env
+web/.env.*
+!web/.env.example
