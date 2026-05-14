@@ -216,4 +216,139 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     sourceHint: 'Промпт: встроенные списки с вариантами и перманентные вопросы',
     createdAtIso: '2026-05-15T20:00:00.000Z',
   },
+  {
+    id: 'seed-canon2-repo',
+    title: 'Канон-2 в репозитории (PDF → CANON_SECONDARY_MASTER.txt)',
+    summary:
+      'Второй по важности текст в Git: извлечение из PDF «Мастер как многослойная private social operating system»; связка с SWOD закон 3.',
+    tags: ['canon', 'governance', 'docs'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-dual-os',
+    title: 'Личная OS: два фасада и слои видимости',
+    summary:
+      'Не CRM: операционная система отношений/памяти/доступа; каждый видит свой слой; публичный и приватный контуры.',
+    tags: ['architecture', 'product', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-commodity',
+    title: 'Commodity-слои vs уникальное ядро',
+    summary:
+      'Не переписывать календарь/чат ради галочки; уникальны слой раскрытия, гость у хозяина, проекции и политика раскрытия.',
+    tags: ['architecture', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-bounded',
+    title: 'Bounded contexts (публичный, личный, семья, команда, бизнес, наставник, дух, посёлок)',
+    summary:
+      'Контуры не смешивать в одну таблицу «профиля»; отдельные продуктовые области с разными владельцами раскрытия.',
+    tags: ['ddd', 'architecture', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-initiation',
+    title: 'Инициация вместо SaaS-signup',
+    summary:
+      'Цепочка: публичный вход → заявка → собеседование → базовый слой → расширение по доверию/оплате/решениям владельца.',
+    tags: ['ux', 'product', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-ingest',
+    title: 'Ingest-first ядро',
+    summary:
+      'Строить от входящего потока: заметка, письмо, сообщение, медиа, событие, задача, мысль, отчёт — затем разнесение по слоям и людям.',
+    tags: ['pipeline', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-agents',
+    title: 'Агенты/клоны как отдельный тип субъекта',
+    summary:
+      'Не маскировать клон под человека; делегированные полномочия; связка с OpenFGA/Keycloak сценариями для агентов и MCP.',
+    tags: ['security', 'authz', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-projections',
+    title: 'Канонический объект и управляемые проекции',
+    summary:
+      'Один источник правды и разные проекции в семейный, рабочий и отчётный слои с разной видимостью полей и вложений.',
+    tags: ['data-model', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-authz',
+    title: 'RBAC + ABAC + ReBAC + PostgreSQL RLS',
+    summary:
+      'Гибрид моделей доступа; RLS как последняя линия при багах API; deny by default; осторожность с service keys, обходящими RLS.',
+    tags: ['authz', 'postgres', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-subjects',
+    title: 'Каталог типов субъектов (root…guest, sales, community, agent)',
+    summary:
+      'Доступ = роль + отношение + слой + срок + объём полей; не «роль навсегда»; рекомендуемые роли для ключевых людей в тексте канона.',
+    tags: ['authz', 'roles', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-two-tempo',
+    title: 'Два темпа поставки',
+    summary:
+      'Быстрый старт на сервере в первый день и параллельное выращивание уникального ядра, переживающего смену модулей.',
+    tags: ['process', 'devops', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-stack',
+    title: 'Опорный стек: HumHub, Keycloak, OpenFGA, Postgres+RLS, Nextcloud, Obsidian, Telegram, Ollama, Matrix позже',
+    summary:
+      'Сборка зрелых модулей под self-hosted; разные админ-консоли поверх одного identity; локальные модели для чувствительного анализа.',
+    tags: ['stack', 'self-hosted', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-metadata',
+    title: 'Метаданные объекта и политики хранения',
+    summary:
+      'Поля owner/layer/visibility/relation/billing/sensitivity/consent/retention/audit; политика по умолчанию — отказ без явного правила.',
+    tags: ['data-model', 'privacy', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-disclosure',
+    title: 'Двухступенчатое раскрытие (факт → содержание)',
+    summary:
+      'Для семьи, духовного контура и наставника: сначала факт существования события/заметки, затем содержание по отдельному разрешению.',
+    tags: ['ux', 'privacy', 'canon2'],
+    sourceHint: 'CANON_SECONDARY_MASTER.txt',
+    createdAtIso: '2026-05-15T22:00:00.000Z',
+  },
+  {
+    id: 'seed-canon2-bundled-json',
+    title: 'Встроенный JSON анализа канона-2 в UI',
+    summary:
+      'Файл web/src/data/canonSecondaryExternalAnalysis.v1.json; кнопка «Канон-2 (PDF) в слой» на вкладке «Поток» подгружает внешний анализ без ручного копирования.',
+    tags: ['ui', 'analysis', 'canon2'],
+    sourceHint: 'Запрос пользователя: разнести канон и JSON',
+    createdAtIso: '2026-05-15T22:30:00.000Z',
+  },
 ]

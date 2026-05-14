@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react'
 import { countWords } from '../analysis/text/countWords'
+import bundledCanonSecondaryV1 from '../data/canonSecondaryExternalAnalysis.v1.json'
 import { readTextFile } from '../lib/readTextFile'
 import { formatInt } from '../lib/formatInt'
 import { useAnalysisSessionStore } from '../store/analysisSessionStore'
@@ -220,13 +221,22 @@ export function StreamWorkspace() {
       <section className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-zinc-200">Глубокий анализ (JSON)</h2>
-          <AppButton
-            type="button"
-            onClick={() => applyExternalJson(jsonDraft)}
-            disabled={!jsonDraft.trim()}
-          >
-            Импортировать JSON
-          </AppButton>
+          <div className="flex flex-wrap gap-2">
+            <AppButton
+              type="button"
+              variant="ghost"
+              onClick={() => applyExternalJson(JSON.stringify(bundledCanonSecondaryV1))}
+            >
+              Канон-2 (PDF) в слой
+            </AppButton>
+            <AppButton
+              type="button"
+              onClick={() => applyExternalJson(jsonDraft)}
+              disabled={!jsonDraft.trim()}
+            >
+              Импортировать JSON
+            </AppButton>
+          </div>
         </div>
         <textarea
           value={jsonDraft}
