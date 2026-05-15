@@ -12,3 +12,5 @@ curl -s http://127.0.0.1:3847/health
 Порт по умолчанию `3847`, переопределение: `PORT=4000 npm start`.
 
 Черновик контракта: `openapi.yaml` в этом каталоге.
+
+Заготовка миграций и RLS: каталог `migrations/` (README) и `docs/RLS_NOTES.md`.
