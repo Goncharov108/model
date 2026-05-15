@@ -92,6 +92,11 @@ export function StreamWorkspace() {
         ))}
       </section>
 
+      <SurfaceCard
+        title="Тексты канона в репозитории model"
+        description="Файлы в корне рядом с web/: CANON_SECONDARY_MASTER.txt (канон-2), CANON_PROJECT_MASTER.txt (канон-3), SWOD_ZAKONOV.txt — свод законов. Открой их в IDE; в этот экран текст попадает только вручную — вставка или загрузка .txt."
+      />
+
       <section className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-zinc-200">Источник текста</h2>
