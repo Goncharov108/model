@@ -1,12 +1,16 @@
 import { useId, useRef, useState } from 'react'
+import { ThemeBlockAnchors } from '../components/analysis/ThemeBlockAnchors'
 import { countWords } from '../analysis/text/countWords'
 import bundledCanonProjectMasterV1 from '../data/canonProjectMasterExternalAnalysis.v1.json'
 import bundledCanonSecondaryV1 from '../data/canonSecondaryExternalAnalysis.v1.json'
+import { downloadJson } from '../lib/downloadJson'
 import { readTextFile } from '../lib/readTextFile'
+import { buildWorkspaceBrowserSnapshot } from '../lib/workspaceBrowserSnapshot'
 import { formatInt } from '../lib/formatInt'
 import { useAnalysisSessionStore } from '../store/analysisSessionStore'
 import { useStreamWorkspaceStore } from '../store/streamWorkspaceStore'
 import { AppButton } from '../ui/AppButton'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { SurfaceCard } from '../ui/SurfaceCard'
 
 const JSON_PLACEHOLDER = `{
@@ -55,6 +59,7 @@ export function StreamWorkspace() {
   const setImportError = useAnalysisSessionStore((s) => s.setImportError)
 
   const [jsonDraft, setJsonDraft] = useState('')
+  const [clearAnalysisOpen, setClearAnalysisOpen] = useState(false)
 
   async function onPickFile(fileList: FileList | null) {
     const file = fileList?.[0]
@@ -72,6 +77,18 @@ export function StreamWorkspace() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
+      <ConfirmDialog
+        open={clearAnalysisOpen}
+        title="Сбросить анализ?"
+        description="Локальный и внешний слой анализа будут очищены в этом браузере. Текст в поле «Поток» не удаляется."
+        confirmLabel="Сбросить"
+        confirmVariant="danger"
+        onCancel={() => setClearAnalysisOpen(false)}
+        onConfirm={() => {
+          clear()
+          setImportError(null)
+        }}
+      />
       <header className="space-y-3 border-b border-zinc-800 pb-8">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300/90">
           Локальное рабочее место
@@ -119,8 +136,8 @@ export function StreamWorkspace() {
             >
               Локальный анализ
             </AppButton>
-            <AppButton type="button" variant="ghost" onClick={() => clear()}>
-              Сбросить анализ
+            <AppButton type="button" variant="ghost" onClick={() => setClearAnalysisOpen(true)}>
+              Сбросить анализ…
             </AppButton>
             <AppButton
               type="button"
@@ -129,6 +146,15 @@ export function StreamWorkspace() {
               disabled={!local && !external}
             >
               Экспорт JSON
+            </AppButton>
+            <AppButton
+              type="button"
+              variant="ghost"
+              onClick={() =>
+                downloadJson(`workspace-browser-${Date.now()}.json`, buildWorkspaceBrowserSnapshot())
+              }
+            >
+              Снимок браузера
             </AppButton>
           </div>
         </div>
@@ -203,7 +229,8 @@ export function StreamWorkspace() {
               {local.blocks.map((block) => (
                 <li
                   key={block.id}
-                  className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-left"
+                  id={`analysis-block-${block.index}`}
+                  className="scroll-mt-28 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-left"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
                     <span>
@@ -275,6 +302,7 @@ export function StreamWorkspace() {
                     <li key={t.id} className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
                       <p className="text-sm font-semibold text-zinc-100">{t.title}</p>
                       <p className="mt-1 text-xs leading-relaxed text-zinc-400">{t.rationale}</p>
+                      <ThemeBlockAnchors theme={t} blockCount={local?.blocks.length ?? 0} />
                     </li>
                   ))}
                 </ul>

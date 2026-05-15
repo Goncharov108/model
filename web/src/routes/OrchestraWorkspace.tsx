@@ -6,6 +6,7 @@ import { buildOrchestraExport, parseOrchestraImport } from '../lib/orchestraSnap
 import { downloadJson } from '../lib/downloadJson'
 import { useOrchestraStore } from '../store/orchestraStore'
 import { AppButton } from '../ui/AppButton'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { SurfaceCard } from '../ui/SurfaceCard'
 
 /** Экран режима «Оркестр»: роли агентов, задачи и заметки дирижёра с персистентностью в браузере. */
@@ -26,6 +27,7 @@ export function OrchestraWorkspace(): JSX.Element {
 
   const [importDraft, setImportDraft] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
 
   function onExport() {
     const payload = buildOrchestraExport({ agents, tickets, conductorNotes })
@@ -49,18 +51,23 @@ export function OrchestraWorkspace(): JSX.Element {
   }
 
   function onResetAll() {
-    if (
-      window.confirm(
-        'Сбросить роли, задачи и заметки к шаблону по умолчанию? Текущее состояние пропадёт из этого браузера.',
-      )
-    ) {
-      resetToDefaults()
-      setImportError(null)
-    }
+    setResetDialogOpen(true)
   }
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-4 py-10 sm:px-6 lg:px-8">
+      <ConfirmDialog
+        open={resetDialogOpen}
+        title="Полный сброс оркестра?"
+        description="Роли, задачи и заметки дирижёра вернутся к шаблону по умолчанию. Текущее состояние пропадёт из этого браузера."
+        confirmLabel="Сбросить"
+        confirmVariant="danger"
+        onCancel={() => setResetDialogOpen(false)}
+        onConfirm={() => {
+          resetToDefaults()
+          setImportError(null)
+        }}
+      />
       <header className="space-y-3 border-b border-zinc-800 pb-8">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300/90">
           Режим оркестра
@@ -106,7 +113,7 @@ export function OrchestraWorkspace(): JSX.Element {
             Роли по умолчанию
           </AppButton>
           <AppButton type="button" variant="danger" onClick={onResetAll}>
-            Полный сброс
+            Полный сброс…
           </AppButton>
         </div>
         <textarea

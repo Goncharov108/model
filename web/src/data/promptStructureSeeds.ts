@@ -432,4 +432,22 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     sourceHint: 'Запрос пользователя: план реализации и следование ему',
     createdAtIso: '2026-05-16T00:00:00.000Z',
   },
+  {
+    id: 'seed-a11y-dialog-skip',
+    title: 'Доступность: диалог подтверждения и skip-link',
+    summary:
+      'Нативный dialog для опасных действий; контраст ghost-кнопок; skip-link к #main-content; якоря блоков анализа.',
+    tags: ['a11y', 'ui'],
+    sourceHint: 'План фаза 2',
+    createdAtIso: '2026-05-16T00:30:00.000Z',
+  },
+  {
+    id: 'seed-api-placeholder',
+    title: 'Заготовка API (api/server.mjs)',
+    summary:
+      'GET /health на Node, openapi.yaml, CI-смок; до выбора NestJS из канона-3.',
+    tags: ['api', 'ci', 'stack'],
+    sourceHint: 'План фаза 4',
+    createdAtIso: '2026-05-16T00:30:00.000Z',
+  },
 ]

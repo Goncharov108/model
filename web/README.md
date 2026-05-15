@@ -21,6 +21,8 @@ npm run test
 npm run test:watch
 ```
 
+После push в GitHub workflow **CI** (`.github/workflows/ci.yml`): lint, test, build в `web/`, смок `api/server.mjs` (`/health`).
+
 ## Node
 
 В корне репозитория есть `.nvmrc` (сейчас `22`). Убедись, что в `PATH` используется соответствующий Node (например через nvm).

@@ -23,15 +23,15 @@
 - [x] Модульные тесты (Vitest) для `parseOrchestraImport` / `buildOrchestraExport` и для `parsePlanningImport` / `buildPlanningExport`.
 - [x] Скрипты `npm run test` и `npm run test:watch` в `web/package.json`.
 - [x] Расширить тестами `parseExternalAnalysisJson` (по мере стабилизации формата).
-- [ ] CI (GitHub Actions или аналог): `lint`, `test`, `build` на push — когда появится удалённый репозиторий с CI.
+- [x] CI (GitHub Actions): `lint`, `test`, `build` для `web/` + смок `api/server.mjs` (`GET /health`) — `.github/workflows/ci.yml`.
 
 ---
 
 ## Фаза 2 — UX рабочего места «Поток»
 
 - [x] Явная связка экрана «Поток» с файлом канона в репозитории (подсказки/ссылки только на пути в Git, без автозагрузки секретов).
-- [ ] Улучшение доступности: фокус-ловушки в модалках (если появятся), контраст кнопок.
-- [ ] Экспорт «снимка сессии» одним архивом (опционально): мастер-текст не включать — только то, что уже в браузере.
+- [x] Улучшение доступности: подтверждения на нативном `<dialog>` (ловушка фокуса), контраст и размер кнопок (`AppButton`), skip-link и `<main id="main-content">`.
+- [x] Экспорт «снимка сессии» одним JSON: кнопка «Снимок браузера» на «Потоке» (`buildWorkspaceBrowserSnapshot` — поток, анализ, план, оркестр; только localStorage).
 
 ---
 
@@ -39,8 +39,8 @@
 
 Цель: перевести словарь из канона-3 в типы и фабрики в `web/src`, без обязательного сервера.
 
-- [ ] Черновик `domain/` или `model/`: сущности слой, субъект, объект, отношение (типы + пустые редьюсеры или in-memory store).
-- [ ] Связь «абзац анализа ↔ тег темы из JSON» для навигации по импорту.
+- [x] Черновик `domain/canonDomainModel.ts`: слои, субъекты, отношения, `createEmptyCanonGraph()` + тест.
+- [x] Связь «тема внешнего JSON ↔ блоки локального анализа»: `resolveThemeBlockIndices`, компонент `ThemeBlockAnchors`, якоря `#analysis-block-N` у блоков.
 
 ---
 
@@ -48,9 +48,9 @@
 
 По канону-3 перспектива — NestJS + Postgres + Keycloak + OpenFGA; **решение не зафиксировано** в SWOD до явного утверждения.
 
-- [ ] Репозиторий или каталог `api/` с health-check и одной read-only ручкой.
+- [x] Каталог `api/` с `GET /health` (Node, `server.mjs`) и `README.md`.
 - [ ] Схема миграций и заготовка под RLS (документ + пустые миграции).
-- [ ] Контракт OpenAPI между `web` и `api`.
+- [x] Черновик контракта: `api/openapi.yaml` (путь `/health`).
 
 ---
 

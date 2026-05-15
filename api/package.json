@@ -1,0 +1,13 @@
+{
+  "name": "model-api-placeholder",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Заготовка HTTP-сервиса до выбора NestJS/стека (фаза 4 плана).",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

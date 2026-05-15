@@ -7,6 +7,7 @@ import { buildPlanningExport, parsePlanningImport } from '../lib/planningSnapsho
 import { downloadJson } from '../lib/downloadJson'
 import { usePlanningAnswersStore } from '../store/planningAnswersStore'
 import { AppButton } from '../ui/AppButton'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 
 /** Перманентный опросник плана: ответы сохраняются в localStorage. */
 export function PlanningQuestionnaireWorkspace(): JSX.Element {
@@ -18,6 +19,7 @@ export function PlanningQuestionnaireWorkspace(): JSX.Element {
 
   const [importDraft, setImportDraft] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
+  const [clearDialogOpen, setClearDialogOpen] = useState(false)
 
   function valueFor(id: string): PlanAnswerValue {
     return answers[id] ?? { optionId: null, customText: '' }
@@ -41,14 +43,23 @@ export function PlanningQuestionnaireWorkspace(): JSX.Element {
   }
 
   function onClearAll() {
-    if (window.confirm('Очистить все ответы опросника в этом браузере?')) {
-      clearAll()
-      setImportError(null)
-    }
+    setClearDialogOpen(true)
   }
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
+      <ConfirmDialog
+        open={clearDialogOpen}
+        title="Очистить ответы?"
+        description="Все ответы опросника в этом браузере будут удалены из localStorage. Действие необратимо."
+        confirmLabel="Очистить"
+        confirmVariant="danger"
+        onCancel={() => setClearDialogOpen(false)}
+        onConfirm={() => {
+          clearAll()
+          setImportError(null)
+        }}
+      />
       <header className="space-y-3 border-b border-zinc-800 pb-8">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300/90">
           План реализации
@@ -68,7 +79,7 @@ export function PlanningQuestionnaireWorkspace(): JSX.Element {
             Импорт JSON
           </AppButton>
           <AppButton type="button" variant="danger" onClick={onClearAll}>
-            Очистить ответы
+            Очистить ответы…
           </AppButton>
         </div>
         <textarea

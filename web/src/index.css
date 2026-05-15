@@ -15,3 +15,7 @@ body {
 #root {
   @apply min-h-svh;
 }
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.65);
+}
