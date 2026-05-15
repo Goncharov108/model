@@ -8,6 +8,7 @@ import { downloadJson } from '../lib/downloadJson'
 import { usePlanningAnswersStore } from '../store/planningAnswersStore'
 import { AppButton } from '../ui/AppButton'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { PageHeader } from '../ui/PageHeader'
 
 /** Перманентный опросник плана: ответы сохраняются в localStorage. */
 export function PlanningQuestionnaireWorkspace(): JSX.Element {
@@ -60,18 +61,13 @@ export function PlanningQuestionnaireWorkspace(): JSX.Element {
           setImportError(null)
         }}
       />
-      <header className="space-y-3 border-b border-zinc-800 pb-8">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300/90">
-          План реализации
-        </p>
-        <h1 className="text-balance text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
-          Вопросы с вариантами
-        </h1>
-        <p className="max-w-2xl text-pretty text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Ответы хранятся только в этом браузере. Чтобы передать их ассистенту в чат — нажми
-          «Экспорт JSON» и вставь файл или содержимое сюда. Импорт восстанавливает ответы из JSON.
-        </p>
-        <div className="flex flex-wrap gap-2 pt-2">
+      <PageHeader
+        eyebrow="План реализации"
+        title="Вопросы с вариантами"
+        description="Ответы хранятся только в этом браузере. Чтобы передать их ассистенту в чат — нажми «Экспорт JSON» и вставь файл или содержимое сюда. Импорт восстанавливает ответы из JSON."
+      />
+      <section className="-mt-4 space-y-3 border-b border-zinc-800 pb-8">
+        <div className="flex flex-wrap gap-2">
           <AppButton type="button" onClick={onExport}>
             Экспорт JSON
           </AppButton>
@@ -94,7 +90,7 @@ export function PlanningQuestionnaireWorkspace(): JSX.Element {
             {importError}
           </p>
         ) : null}
-      </header>
+      </section>
 
       <ol className="flex list-decimal flex-col gap-6 pl-5 marker:text-zinc-500">
         {PLANNING_QUESTIONNAIRE.map((q, index) => (

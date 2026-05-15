@@ -1,5 +1,7 @@
 import { useId, useRef, useState } from 'react'
+import { AnalysisBlocksOutline } from '../components/analysis/AnalysisBlocksOutline'
 import { ThemeBlockAnchors } from '../components/analysis/ThemeBlockAnchors'
+import { ActiveStructureBanner } from '../components/stream/ActiveStructureBanner'
 import { countWords } from '../analysis/text/countWords'
 import bundledCanonProjectMasterV1 from '../data/canonProjectMasterExternalAnalysis.v1.json'
 import bundledCanonSecondaryV1 from '../data/canonSecondaryExternalAnalysis.v1.json'
@@ -11,6 +13,7 @@ import { useAnalysisSessionStore } from '../store/analysisSessionStore'
 import { useStreamWorkspaceStore } from '../store/streamWorkspaceStore'
 import { AppButton } from '../ui/AppButton'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { PageHeader } from '../ui/PageHeader'
 import { SurfaceCard } from '../ui/SurfaceCard'
 
 const JSON_PLACEHOLDER = `{
@@ -49,6 +52,8 @@ export function StreamWorkspace() {
   const fileInputId = useId()
   const masterRawText = useStreamWorkspaceStore((s) => s.masterRawText)
   const setMasterRawText = useStreamWorkspaceStore((s) => s.setMasterRawText)
+  const activeStructure = useStreamWorkspaceStore((s) => s.activeStructure)
+  const clearActiveStructure = useStreamWorkspaceStore((s) => s.clearActiveStructure)
   const local = useAnalysisSessionStore((s) => s.local)
   const external = useAnalysisSessionStore((s) => s.external)
   const importError = useAnalysisSessionStore((s) => s.importError)
@@ -89,19 +94,18 @@ export function StreamWorkspace() {
           setImportError(null)
         }}
       />
-      <header className="space-y-3 border-b border-zinc-800 pb-8">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300/90">
-          Локальное рабочее место
-        </p>
-        <h1 className="text-balance text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
-          Структурирование потока сознания
-        </h1>
-        <p className="max-w-2xl text-pretty text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Вставь фундаментальный текст или загрузь файл — локальный анализ разложит поток на блоки и
-          метрики. JSON глубокого разбора от модели/агента можно импортировать отдельным слоем для
-          дальнейшей корректировки.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Локальное рабочее место"
+        title="Структурирование потока сознания"
+        description="Вставь фундаментальный текст или загрузи файл — локальный анализ разложит поток на блоки и метрики. JSON глубокого разбора от модели/агента можно импортировать отдельным слоем для дальнейшей корректировки."
+      />
+
+      {activeStructure ? (
+        <ActiveStructureBanner
+          structure={activeStructure}
+          onDismiss={clearActiveStructure}
+        />
+      ) : null}
 
       <section className="grid gap-4 lg:grid-cols-3">
         {OVERVIEW_CARDS.map((card) => (
@@ -174,7 +178,38 @@ export function StreamWorkspace() {
             {importError}
           </p>
         ) : null}
+        {!masterRawText.trim() ? (
+          <div
+            className="rounded-xl border border-dashed border-zinc-700 bg-zinc-950/40 px-4 py-6 text-center"
+            role="status"
+          >
+            <p className="text-sm font-medium text-zinc-200">Поток пока пуст</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Вставьте текст в поле выше или нажмите «Загрузить .txt», затем «Локальный анализ».
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <AppButton variant="ghost" type="button" onClick={() => fileInputRef.current?.click()}>
+                Загрузить .txt
+              </AppButton>
+            </div>
+          </div>
+        ) : null}
       </section>
+
+      {masterRawText.trim() && !local ? (
+        <div
+          className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/20 px-6 py-8 text-center"
+          role="status"
+        >
+          <p className="text-sm font-medium text-zinc-200">Текст есть, анализа ещё нет</p>
+          <p className="mt-2 text-xs text-zinc-500">
+            Нажмите «Локальный анализ», чтобы получить блоки, метрики и оглавление по абзацам.
+          </p>
+          <AppButton type="button" className="mt-4" onClick={() => runLocal(masterRawText)}>
+            Локальный анализ
+          </AppButton>
+        </div>
+      ) : null}
 
       {local ? (
         <section className="space-y-4">
@@ -225,28 +260,31 @@ export function StreamWorkspace() {
             title="Блоки потока"
             description="Разбиение по пустым строкам; каждый блок можно исследовать отдельно."
           >
-            <ul className="mt-4 space-y-3">
-              {local.blocks.map((block) => (
-                <li
-                  key={block.id}
-                  id={`analysis-block-${block.index}`}
-                  className="scroll-mt-28 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-left"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
-                    <span>
-                      блок #{block.index + 1} · предложений {block.sentenceCount} · слов{' '}
-                      {block.wordCount}
-                    </span>
-                    <code className="rounded bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400">
-                      {block.id}
-                    </code>
-                  </div>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">
-                    {block.text}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-4 flex gap-6">
+              <AnalysisBlocksOutline blocks={local.blocks} />
+              <ul className="min-w-0 flex-1 space-y-3">
+                {local.blocks.map((block) => (
+                  <li
+                    key={block.id}
+                    id={`analysis-block-${block.index}`}
+                    className="scroll-mt-28 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-left"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
+                      <span>
+                        блок #{block.index + 1} · предложений {block.sentenceCount} · слов{' '}
+                        {block.wordCount}
+                      </span>
+                      <code className="rounded bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-400">
+                        {block.id}
+                      </code>
+                    </div>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">
+                      {block.text}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </SurfaceCard>
         </section>
       ) : null}

@@ -19,3 +19,16 @@ body {
 dialog::backdrop {
   background: rgb(0 0 0 / 0.65);
 }
+
+@keyframes masterPanelIn {
+  from {
+    opacity: 0;
+    transform: translateX(-0.75rem);
+    box-shadow: 4px 0 16px rgb(0 0 0 / 0.15);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    box-shadow: 10px 0 40px rgb(0 0 0 / 0.45);
+  }
+}

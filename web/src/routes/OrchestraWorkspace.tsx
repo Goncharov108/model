@@ -7,6 +7,7 @@ import { downloadJson } from '../lib/downloadJson'
 import { useOrchestraStore } from '../store/orchestraStore'
 import { AppButton } from '../ui/AppButton'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { PageHeader } from '../ui/PageHeader'
 import { SurfaceCard } from '../ui/SurfaceCard'
 
 /** Экран режима «Оркестр»: роли агентов, задачи и заметки дирижёра с персистентностью в браузере. */
@@ -68,19 +69,12 @@ export function OrchestraWorkspace(): JSX.Element {
           setImportError(null)
         }}
       />
-      <header className="space-y-3 border-b border-zinc-800 pb-8">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300/90">
-          Режим оркестра
-        </p>
-        <h1 className="text-balance text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
-          Дорожки для вложенных агентов
-        </h1>
-        <p className="max-w-3xl text-pretty text-sm leading-relaxed text-zinc-400 sm:text-base">
-          Репозиторий кода — <span className="text-zinc-300">model</span>. Здесь вы фиксируете роли (какие типы агентов
-          подключать в Cursor), задачи и статусы, чтобы вести несколько дорожек параллельно. Само приложение агентов не
-          запускает: после планирования скопируйте JSON в чат или запускайте вложенных агентов вручную по ролям. Данные
-          хранятся только в этом браузере (<span className="font-mono text-xs">model-orchestra-v1</span>).
-        </p>
+      <PageHeader
+        eyebrow="Режим оркестра"
+        title="Дорожки для вложенных агентов"
+        description="Репозиторий кода — model. Здесь вы фиксируете роли, задачи и статусы для параллельной работы в Cursor. Приложение агентов не запускает; данные — model-orchestra-v1 в этом браузере."
+      />
+      <section className="-mt-4 space-y-3 border-b border-zinc-800 pb-8">
         <details className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3 text-sm text-zinc-400">
           <summary className="cursor-pointer text-zinc-200">Подсказка по типам в Cursor</summary>
           <ul className="mt-2 list-disc space-y-1 pl-5">
@@ -128,7 +122,7 @@ export function OrchestraWorkspace(): JSX.Element {
             {importError}
           </p>
         ) : null}
-      </header>
+      </section>
 
       {agents.length === 0 ? (
         <SurfaceCard className="border-amber-500/30 bg-amber-950/20 p-4 text-sm text-amber-100">
