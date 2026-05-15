@@ -1,7 +1,8 @@
 {
-  "name": "web",
+  "name": "model-web",
   "private": true,
   "version": "0.0.0",
+  "description": "Локальный веб-интерфейс репозитория model (SWOD закон 6).",
   "type": "module",
   "engines": {
     "node": ">=20"
