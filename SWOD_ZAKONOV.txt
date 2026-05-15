@@ -85,3 +85,4 @@
 - 2026-05-16 — фаза 2 (план): на «Потоке» карточка с путями к канонам и SWOD в корне репозитория.
 - 2026-05-16 — фазы 2–4 по плану: `<dialog>` подтверждения, skip-link и main, снимок браузера JSON, домен `canonDomainModel`, темы↔блоки, `api/` + OpenAPI + GitHub Actions CI.
 - 2026-05-16 — `api/migrations/README.md`, `api/docs/RLS_NOTES.md`: заготовка под миграции и RLS (фаза 4 плана).
+- 2026-05-16 — `web/docs/UI_OVERVIEW.md`: обзор интерфейса для онбординга (закон 3).

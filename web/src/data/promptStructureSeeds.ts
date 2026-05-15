@@ -450,4 +450,13 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     sourceHint: 'План фаза 4',
     createdAtIso: '2026-05-16T00:30:00.000Z',
   },
+  {
+    id: 'seed-ui-overview-doc',
+    title: 'Обзор интерфейса (web/docs/UI_OVERVIEW.md)',
+    summary:
+      'Онбординг и формальная продуктовая документация UI: IA, экраны, data map, JSON, a11y, tutorial; без вёрстки кода.',
+    tags: ['docs', 'ui', 'onboarding'],
+    sourceHint: 'web/docs/UI_OVERVIEW.md',
+    createdAtIso: '2026-05-16T01:00:00.000Z',
+  },
 ]
