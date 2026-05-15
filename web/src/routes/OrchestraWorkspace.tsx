@@ -91,6 +91,10 @@ export function OrchestraWorkspace(): JSX.Element {
             </li>
           </ul>
         </details>
+        <SurfaceCard
+          title="Дорожная карта репозитория"
+          description="Фазы разработки и чеклист — в файле PLAN_REALIZATSII.md в корне каталога model (на одном уровне с web/). Обновляйте чекбоксы по мере выполнения."
+        />
         <div className="flex flex-wrap gap-2 pt-2">
           <AppButton type="button" onClick={onExport}>
             Экспорт JSON

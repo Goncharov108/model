@@ -423,4 +423,13 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     sourceHint: 'Запрос пользователя: режим оркестра и агенты',
     createdAtIso: '2026-05-15T23:59:00.000Z',
   },
+  {
+    id: 'seed-plan-realizatsii',
+    title: 'План реализации (PLAN_REALIZATSII.md)',
+    summary:
+      'Дорожная карта фаз в корне репозитория model; чеклист; закон 3 SWOD; тесты Vitest для импорта JSON.',
+    tags: ['process', 'docs', 'governance'],
+    sourceHint: 'Запрос пользователя: план реализации и следование ему',
+    createdAtIso: '2026-05-16T00:00:00.000Z',
+  },
 ]
