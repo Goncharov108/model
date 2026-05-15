@@ -29,6 +29,9 @@ export function AppShell() {
             <NavLink to="/plan" className={tabClassName}>
               План: вопросы
             </NavLink>
+            <NavLink to="/orchestra" className={tabClassName}>
+              Оркестр
+            </NavLink>
           </nav>
         </div>
       </header>

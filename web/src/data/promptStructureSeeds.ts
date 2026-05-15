@@ -414,4 +414,13 @@ export const DEFAULT_PROMPT_STRUCTURES: PromptStructureItem[] = [
     sourceHint: 'Запрос пользователя: то же, что для канона-2',
     createdAtIso: '2026-05-15T23:20:00.000Z',
   },
+  {
+    id: 'seed-orchestra-mode',
+    title: 'Режим «Оркестр» (/orchestra)',
+    summary:
+      'Роли вложенных агентов, задачи дорожек, статусы, заметки дирижёра; localStorage model-orchestra-v1; экспорт/импорт JSON; закон 12 в SWOD.',
+    tags: ['ui', 'agents', 'process', 'orchestra'],
+    sourceHint: 'Запрос пользователя: режим оркестра и агенты',
+    createdAtIso: '2026-05-15T23:59:00.000Z',
+  },
 ]
