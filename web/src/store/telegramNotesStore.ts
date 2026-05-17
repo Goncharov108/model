@@ -37,6 +37,8 @@ interface TelegramPresetsExport {
   presets: TelegramRoutingRuleSet[]
 }
 
+type PresetImportMode = 'replace' | 'merge'
+
 interface TelegramNotesStoreState {
   snapshot: TelegramNotesSnapshot | null
   selectedIds: string[]
@@ -59,7 +61,7 @@ interface TelegramNotesStoreState {
   applyQuickMode: (mode: QuickMode) => void
   resetPresetsToDefault: () => void
   exportPresets: () => TelegramPresetsExport
-  importPresets: (payload: string) => { ok: boolean; error?: string }
+  importPresets: (payload: string, mode?: PresetImportMode) => { ok: boolean; error?: string }
   applyAutoRouting: () => void
   clear: () => void
 }
@@ -82,6 +84,22 @@ function clonePreset(base: TelegramRoutingRuleSet, patch?: Partial<TelegramRouti
 function sanitizeName(name: string): string {
   const cleaned = name.trim()
   return cleaned || 'Новый пресет'
+}
+
+function normName(name: string): string {
+  return sanitizeName(name).toLocaleLowerCase('ru-RU')
+}
+
+function uniqueName(name: string, existing: Set<string>): string {
+  const base = sanitizeName(name)
+  let candidate = base
+  let i = 2
+  while (existing.has(normName(candidate))) {
+    candidate = `${base} (${i})`
+    i += 1
+  }
+  existing.add(normName(candidate))
+  return candidate
 }
 
 const QUICK_MODE_PRESET: Record<QuickMode, string> = {
@@ -254,15 +272,32 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
           presets: state.routingPresets.filter((p) => !p.locked),
         }
       },
-      importPresets: (payload) => {
+      importPresets: (payload: string, mode: PresetImportMode = 'replace') => {
         try {
           const parsed = JSON.parse(payload)
           const imported = normalizeImportedPresets(parsed)
           if (imported.length === 0) return { ok: false, error: 'Не найдено валидных пресетов в файле' }
-          set((store) => ({
-            routingPresets: [...DEFAULT_PRESETS, ...imported],
-            activePresetId: imported[0].id,
-          }))
+
+          set((store) => {
+            const base = DEFAULT_PRESETS
+            const existingCustom = store.routingPresets.filter((p) => !p.locked)
+            const existingNames = new Set(
+              (mode === 'merge' ? [...base, ...existingCustom] : base).map((p) => normName(p.name)),
+            )
+
+            const normalizedImported = imported.map((p) => ({
+              ...p,
+              id: newId(),
+              name: uniqueName(p.name, existingNames),
+              locked: false,
+            }))
+
+            const custom = mode === 'merge' ? [...existingCustom, ...normalizedImported] : normalizedImported
+            return {
+              routingPresets: [...base, ...custom],
+              activePresetId: normalizedImported[0]?.id ?? store.activePresetId,
+            }
+          })
           return { ok: true }
         } catch {
           return { ok: false, error: 'Некорректный JSON-файл' }

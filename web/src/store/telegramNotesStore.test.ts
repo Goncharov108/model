@@ -129,9 +129,38 @@ describe('telegramNotesStore', () => {
     expect(exported.presets[0]?.name).toBe('Экспортируемый')
 
     store.resetPresetsToDefault()
-    const imported = store.importPresets(JSON.stringify(exported))
+    const imported = store.importPresets(JSON.stringify(exported), 'replace')
     expect(imported.ok).toBe(true)
     expect(useTelegramNotesStore.getState().routingPresets.some((x) => x.name === 'Экспортируемый')).toBe(true)
+  })
+
+  it('merge-импорт добавляет пресеты без потери текущих и без дублей имён', () => {
+    const store = useTelegramNotesStore.getState()
+    store.createPreset('Мой пресет')
+
+    const payload = JSON.stringify({
+      version: 1,
+      presets: [
+        {
+          id: 'x1',
+          name: 'Мой пресет',
+          priorityToState: { high: 'in_work', normal: 'inbox', low: 'inbox' },
+          folderToState: { work: 'in_work' },
+          defaultState: 'inbox',
+        },
+      ],
+    })
+
+    const imported = store.importPresets(payload, 'merge')
+    expect(imported.ok).toBe(true)
+
+    const names = useTelegramNotesStore
+      .getState()
+      .routingPresets.filter((x) => !x.locked)
+      .map((x) => x.name)
+
+    expect(names).toContain('Мой пресет')
+    expect(names.some((x) => x.startsWith('Мой пресет ('))).toBe(true)
   })
 
   it('сбрасывает пресеты к базовым', () => {

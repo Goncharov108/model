@@ -76,6 +76,7 @@ export function MasterAdminIncomingWorkspace() {
   const [folderFilter, setFolderFilter] = useState<TelegramNoteFolder | 'all'>('all')
   const [query, setQuery] = useState('')
   const [presetName, setPresetName] = useState('')
+  const [importMode, setImportMode] = useState<'replace' | 'merge'>('merge')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -313,6 +314,17 @@ export function MasterAdminIncomingWorkspace() {
               >
                 Экспорт пресетов
               </AppButton>
+              <label className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2 text-xs text-zinc-300">
+                Режим импорта:
+                <select
+                  className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs text-zinc-100"
+                  value={importMode}
+                  onChange={(e) => setImportMode(e.target.value as 'replace' | 'merge')}
+                >
+                  <option value="merge">Merge (добавить к текущим)</option>
+                  <option value="replace">Replace (заменить пользовательские)</option>
+                </select>
+              </label>
               <label className="inline-flex cursor-pointer items-center rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2 text-xs text-zinc-200 hover:border-violet-500/50">
                 Импорт пресетов
                 <input
@@ -323,7 +335,7 @@ export function MasterAdminIncomingWorkspace() {
                     const file = e.target.files?.[0]
                     if (!file) return
                     const text = await readTextFile(file)
-                    const result = importPresets(text)
+                    const result = importPresets(text, importMode)
                     if (!result.ok) {
                       window.alert(result.error ?? 'Не удалось импортировать пресеты')
                     }
