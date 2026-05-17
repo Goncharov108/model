@@ -29,3 +29,11 @@ export interface TelegramNotesSnapshot {
   dedupedCount: number
   items: TelegramNoteItem[]
 }
+
+export interface TelegramRoutingRuleSet {
+  id: string
+  name: string
+  priorityToState: Record<TelegramNotePriority, TelegramNoteState>
+  folderToState: Partial<Record<TelegramNoteFolder, TelegramNoteState>>
+  defaultState: TelegramNoteState
+}

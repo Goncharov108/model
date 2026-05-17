@@ -4,6 +4,7 @@ import type {
   TelegramNoteGroup,
   TelegramNotePriority,
   TelegramNoteState,
+  TelegramRoutingRuleSet,
 } from '../domain/telegramNotes'
 import { readTextFile } from '../lib/readTextFile'
 import { countByGroup, parseTelegramNotesExport } from '../lib/telegramNotes'
@@ -48,6 +49,10 @@ export function MasterAdminIncomingWorkspace() {
   const snapshot = useTelegramNotesStore((s) => s.snapshot)
   const setSnapshot = useTelegramNotesStore((s) => s.setSnapshot)
   const selectedIds = useTelegramNotesStore((s) => s.selectedIds)
+  const routingPresets = useTelegramNotesStore((s) => s.routingPresets)
+  const activePresetId = useTelegramNotesStore((s) => s.activePresetId)
+  const setActivePreset = useTelegramNotesStore((s) => s.setActivePreset)
+  const updateActivePreset = useTelegramNotesStore((s) => s.updateActivePreset)
   const setItemState = useTelegramNotesStore((s) => s.setItemState)
   const setItemFolder = useTelegramNotesStore((s) => s.setItemFolder)
   const applyStateToSelected = useTelegramNotesStore((s) => s.applyStateToSelected)
@@ -102,6 +107,10 @@ export function MasterAdminIncomingWorkspace() {
   const selectedCount = selectedIds.length
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
   const allFilteredSelected = filteredItems.length > 0 && filteredItems.every((item) => selectedSet.has(item.id))
+  const activePreset = useMemo(
+    () => routingPresets.find((preset) => preset.id === activePresetId) ?? routingPresets[0],
+    [activePresetId, routingPresets],
+  )
 
   async function handleImport(file: File) {
     setBusy(true)
@@ -126,7 +135,7 @@ export function MasterAdminIncomingWorkspace() {
       <PageHeader
         eyebrow="Мастер-админ"
         title="Входящий поток · ТГ заметки"
-        description="Этап 4: ручное переопределение папки + массовые операции по выбранным заметкам."
+        description="Этап 5: умные правила авто-сортировки с настраиваемыми пресетами + ручное управление."
       />
 
       <SurfaceCard title="Импорт из Telegram">
@@ -230,6 +239,65 @@ export function MasterAdminIncomingWorkspace() {
         </div>
       </SurfaceCard>
 
+      <SurfaceCard title="Умные правила авто-сортировки" description="Выберите пресет и настройте, куда отправлять заметки по приоритету/папке.">
+        {!activePreset ? (
+          <p className="mt-4 text-sm text-zinc-500">Пресеты не найдены.</p>
+        ) : (
+          <div className="mt-4 space-y-4">
+            <label className="flex max-w-sm flex-col gap-1 text-xs text-zinc-500">
+              Пресет
+              <select className={inputClass} value={activePresetId} onChange={(e) => setActivePreset(e.target.value)}>
+                {routingPresets.map((preset) => (
+                  <option key={preset.id} value={preset.id}>{preset.name}</option>
+                ))}
+              </select>
+            </label>
+
+            <div className="grid gap-3 lg:grid-cols-3">
+              {(Object.keys(PRIORITY_LABEL) as TelegramNotePriority[]).map((priority) => (
+                <RuleSelect
+                  key={`priority-${priority}`}
+                  label={`Приоритет: ${PRIORITY_LABEL[priority]}`}
+                  value={activePreset.priorityToState[priority]}
+                  onChange={(state) =>
+                    updateActivePreset({
+                      priorityToState: { ...activePreset.priorityToState, [priority]: state },
+                    } as Partial<TelegramRoutingRuleSet>)
+                  }
+                />
+              ))}
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-3">
+              {(Object.keys(FOLDER_LABEL) as TelegramNoteFolder[]).map((folder) => (
+                <RuleSelect
+                  key={`folder-${folder}`}
+                  label={`Папка: ${FOLDER_LABEL[folder]}`}
+                  value={activePreset.folderToState[folder] ?? activePreset.defaultState}
+                  onChange={(state) =>
+                    updateActivePreset({
+                      folderToState: { ...activePreset.folderToState, [folder]: state },
+                    } as Partial<TelegramRoutingRuleSet>)
+                  }
+                />
+              ))}
+            </div>
+
+            <RuleSelect
+              label="По умолчанию"
+              value={activePreset.defaultState}
+              onChange={(state) => updateActivePreset({ defaultState: state })}
+            />
+
+            <div>
+              <AppButton type="button" variant="ghost" onClick={() => applyAutoRouting()} disabled={!snapshot || busy}>
+                Применить правила сейчас
+              </AppButton>
+            </div>
+          </div>
+        )}
+      </SurfaceCard>
+
       <SurfaceCard title="Массовые операции" description="Работает по выбранным заметкам в текущем списке.">
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <AppButton
@@ -309,6 +377,29 @@ export function MasterAdminIncomingWorkspace() {
         )}
       </SurfaceCard>
     </div>
+  )
+}
+
+function RuleSelect(props: {
+  label: string
+  value: TelegramNoteState
+  onChange: (state: TelegramNoteState) => void
+}) {
+  return (
+    <label className="flex flex-col gap-1 text-xs text-zinc-500">
+      {props.label}
+      <select
+        className={inputClass}
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value as TelegramNoteState)}
+      >
+        {(Object.keys(STATE_LABEL) as TelegramNoteState[]).map((state) => (
+          <option key={state} value={state}>
+            {STATE_LABEL[state]}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }
 

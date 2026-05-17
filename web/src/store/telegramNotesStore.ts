@@ -1,10 +1,29 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { TelegramNoteFolder, TelegramNoteState, TelegramNotesSnapshot } from '../domain/telegramNotes'
+import type { TelegramNoteFolder, TelegramNoteState, TelegramNotesSnapshot, TelegramRoutingRuleSet } from '../domain/telegramNotes'
+
+const DEFAULT_PRESETS: TelegramRoutingRuleSet[] = [
+  {
+    id: 'balanced',
+    name: 'Сбалансированный',
+    priorityToState: { high: 'in_work', normal: 'inbox', low: 'inbox' },
+    folderToState: { work: 'in_work', finance: 'in_work', media: 'archived' },
+    defaultState: 'inbox',
+  },
+  {
+    id: 'focus-work',
+    name: 'Фокус на работе',
+    priorityToState: { high: 'in_work', normal: 'in_work', low: 'inbox' },
+    folderToState: { work: 'in_work', finance: 'in_work', media: 'archived', ideas: 'inbox', misc: 'inbox' },
+    defaultState: 'inbox',
+  },
+]
 
 interface TelegramNotesStoreState {
   snapshot: TelegramNotesSnapshot | null
   selectedIds: string[]
+  routingPresets: TelegramRoutingRuleSet[]
+  activePresetId: string
   setSnapshot: (snapshot: TelegramNotesSnapshot) => void
   setItemState: (id: string, state: TelegramNoteState) => void
   setItemFolder: (id: string, folder: TelegramNoteFolder) => void
@@ -13,8 +32,14 @@ interface TelegramNotesStoreState {
   toggleSelected: (id: string) => void
   clearSelection: () => void
   selectAll: (ids: string[]) => void
+  setActivePreset: (presetId: string) => void
+  updateActivePreset: (patch: Partial<TelegramRoutingRuleSet>) => void
   applyAutoRouting: () => void
   clear: () => void
+}
+
+function getActivePreset(state: Pick<TelegramNotesStoreState, 'routingPresets' | 'activePresetId'>): TelegramRoutingRuleSet {
+  return state.routingPresets.find((p) => p.id === state.activePresetId) ?? state.routingPresets[0] ?? DEFAULT_PRESETS[0]
 }
 
 export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
@@ -22,6 +47,8 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
     (set) => ({
       snapshot: null,
       selectedIds: [],
+      routingPresets: DEFAULT_PRESETS,
+      activePresetId: DEFAULT_PRESETS[0].id,
       setSnapshot: (snapshot) => set({ snapshot, selectedIds: [] }),
       setItemState: (id, state) =>
         set((store) => {
@@ -72,26 +99,50 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
         }),
       clearSelection: () => set({ selectedIds: [] }),
       selectAll: (ids) => set({ selectedIds: [...new Set(ids)] }),
+      setActivePreset: (presetId) => set({ activePresetId: presetId }),
+      updateActivePreset: (patch) =>
+        set((store) => ({
+          routingPresets: store.routingPresets.map((preset) =>
+            preset.id === store.activePresetId
+              ? {
+                  ...preset,
+                  ...patch,
+                  priorityToState: { ...preset.priorityToState, ...(patch.priorityToState ?? {}) },
+                  folderToState: { ...preset.folderToState, ...(patch.folderToState ?? {}) },
+                }
+              : preset,
+          ),
+        })),
       applyAutoRouting: () =>
         set((store) => {
           if (!store.snapshot) return store
+          const preset = getActivePreset(store)
           return {
             snapshot: {
               ...store.snapshot,
               items: store.snapshot.items.map((item) => {
-                if (item.priority === 'high') return { ...item, state: 'in_work' }
-                if (item.folder === 'work' || item.folder === 'finance') return { ...item, state: 'in_work' }
-                if (item.folder === 'media') return { ...item, state: 'archived' }
-                return { ...item, state: 'inbox' }
+                const fromPriority = preset.priorityToState[item.priority]
+                const fromFolder = preset.folderToState[item.folder]
+                return { ...item, state: fromPriority ?? fromFolder ?? preset.defaultState }
               }),
             },
           }
         }),
-      clear: () => set({ snapshot: null, selectedIds: [] }),
+      clear: () =>
+        set({
+          snapshot: null,
+          selectedIds: [],
+          routingPresets: DEFAULT_PRESETS,
+          activePresetId: DEFAULT_PRESETS[0].id,
+        }),
     }),
     {
       name: 'model-telegram-notes-v1',
-      partialize: (state) => ({ snapshot: state.snapshot }),
+      partialize: (state) => ({
+        snapshot: state.snapshot,
+        routingPresets: state.routingPresets,
+        activePresetId: state.activePresetId,
+      }),
     },
   ),
 )

@@ -64,4 +64,23 @@ describe('telegramNotesStore', () => {
     expect(items.every((x) => x.state === 'archived')).toBe(true)
     expect(items.every((x) => x.folder === 'misc')).toBe(true)
   })
+
+  it('применяет авто-сортировку по активному пресету', () => {
+    useTelegramNotesStore.getState().setSnapshot(makeSnapshot())
+    useTelegramNotesStore.getState().setActivePreset('focus-work')
+    useTelegramNotesStore.getState().updateActivePreset({
+      priorityToState: { high: 'archived', normal: 'inbox', low: 'inbox' },
+      folderToState: { work: 'in_work', finance: 'in_work', media: 'archived' },
+      defaultState: 'inbox',
+    })
+
+    useTelegramNotesStore.getState().applyAutoRouting()
+
+    const items = useTelegramNotesStore.getState().snapshot?.items ?? []
+    const item1 = items.find((x) => x.id === '1')
+    const item2 = items.find((x) => x.id === '2')
+
+    expect(item1?.state).toBe('inbox')
+    expect(item2?.state).toBe('archived')
+  })
 })
