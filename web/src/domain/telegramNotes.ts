@@ -33,6 +33,7 @@ export interface TelegramNotesSnapshot {
 export interface TelegramRoutingRuleSet {
   id: string
   name: string
+  locked?: boolean
   priorityToState: Record<TelegramNotePriority, TelegramNoteState>
   folderToState: Partial<Record<TelegramNoteFolder, TelegramNoteState>>
   defaultState: TelegramNoteState

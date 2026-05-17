@@ -83,4 +83,39 @@ describe('telegramNotesStore', () => {
     expect(item1?.state).toBe('inbox')
     expect(item2?.state).toBe('archived')
   })
+
+  it('создаёт, дублирует, переименовывает и удаляет пользовательский пресет', () => {
+    const store = useTelegramNotesStore.getState()
+
+    const baseCount = store.routingPresets.length
+    store.createPreset('Мой режим')
+    expect(useTelegramNotesStore.getState().routingPresets.length).toBe(baseCount + 1)
+
+    store.duplicateActivePreset()
+    expect(useTelegramNotesStore.getState().routingPresets.length).toBe(baseCount + 2)
+
+    store.renameActivePreset('Кастом 2')
+    const active = useTelegramNotesStore.getState().routingPresets.find((x) => x.id === useTelegramNotesStore.getState().activePresetId)
+    expect(active?.name).toBe('Кастом 2')
+
+    store.deleteActivePreset()
+    expect(useTelegramNotesStore.getState().routingPresets.length).toBe(baseCount + 1)
+  })
+
+  it('не удаляет базовый пресет и переключает быстрые режимы', () => {
+    const store = useTelegramNotesStore.getState()
+    store.setActivePreset('balanced')
+    const before = store.routingPresets.length
+    store.deleteActivePreset()
+    expect(useTelegramNotesStore.getState().routingPresets.length).toBe(before)
+
+    store.applyQuickMode('workday')
+    expect(useTelegramNotesStore.getState().activePresetId).toBe('focus-work')
+
+    store.applyQuickMode('incoming')
+    expect(useTelegramNotesStore.getState().activePresetId).toBe('balanced')
+
+    store.applyQuickMode('archive')
+    expect(useTelegramNotesStore.getState().activePresetId).toBe('archive-mode')
+  })
 })

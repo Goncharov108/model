@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type {
   TelegramNoteFolder,
   TelegramNoteGroup,
@@ -53,6 +53,11 @@ export function MasterAdminIncomingWorkspace() {
   const activePresetId = useTelegramNotesStore((s) => s.activePresetId)
   const setActivePreset = useTelegramNotesStore((s) => s.setActivePreset)
   const updateActivePreset = useTelegramNotesStore((s) => s.updateActivePreset)
+  const createPreset = useTelegramNotesStore((s) => s.createPreset)
+  const duplicateActivePreset = useTelegramNotesStore((s) => s.duplicateActivePreset)
+  const renameActivePreset = useTelegramNotesStore((s) => s.renameActivePreset)
+  const deleteActivePreset = useTelegramNotesStore((s) => s.deleteActivePreset)
+  const applyQuickMode = useTelegramNotesStore((s) => s.applyQuickMode)
   const setItemState = useTelegramNotesStore((s) => s.setItemState)
   const setItemFolder = useTelegramNotesStore((s) => s.setItemFolder)
   const applyStateToSelected = useTelegramNotesStore((s) => s.applyStateToSelected)
@@ -67,6 +72,7 @@ export function MasterAdminIncomingWorkspace() {
   const [stateFilter, setStateFilter] = useState<TelegramNoteState | 'all'>('all')
   const [folderFilter, setFolderFilter] = useState<TelegramNoteFolder | 'all'>('all')
   const [query, setQuery] = useState('')
+  const [presetName, setPresetName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -111,6 +117,11 @@ export function MasterAdminIncomingWorkspace() {
     () => routingPresets.find((preset) => preset.id === activePresetId) ?? routingPresets[0],
     [activePresetId, routingPresets],
   )
+  const isActivePresetLocked = Boolean(activePreset?.locked)
+
+  useEffect(() => {
+    setPresetName(activePreset?.name ?? '')
+  }, [activePreset?.id, activePreset?.name])
 
   async function handleImport(file: File) {
     setBusy(true)
@@ -135,7 +146,7 @@ export function MasterAdminIncomingWorkspace() {
       <PageHeader
         eyebrow="Мастер-админ"
         title="Входящий поток · ТГ заметки"
-        description="Этап 5: умные правила авто-сортировки с настраиваемыми пресетами + ручное управление."
+        description="Этап 6: пользовательские пресеты и быстрые режимы авто-сортировки."
       />
 
       <SurfaceCard title="Импорт из Telegram">
@@ -248,10 +259,32 @@ export function MasterAdminIncomingWorkspace() {
               Пресет
               <select className={inputClass} value={activePresetId} onChange={(e) => setActivePreset(e.target.value)}>
                 {routingPresets.map((preset) => (
-                  <option key={preset.id} value={preset.id}>{preset.name}</option>
+                  <option key={preset.id} value={preset.id}>{preset.name}{preset.locked ? ' · базовый' : ''}</option>
                 ))}
               </select>
             </label>
+
+            <div className="flex flex-wrap gap-2">
+              <AppButton type="button" variant="ghost" onClick={() => applyQuickMode('workday')}>Режим: Рабочий день</AppButton>
+              <AppButton type="button" variant="ghost" onClick={() => applyQuickMode('incoming')}>Режим: Разбор входящих</AppButton>
+              <AppButton type="button" variant="ghost" onClick={() => applyQuickMode('archive')}>Режим: Архивный</AppButton>
+            </div>
+
+            <div className="grid gap-2 lg:grid-cols-[1fr_auto_auto_auto] lg:items-end">
+              <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                Название активного пресета
+                <input className={inputClass} value={presetName} onChange={(e) => setPresetName(e.target.value)} />
+              </label>
+              <AppButton type="button" variant="ghost" onClick={() => renameActivePreset(presetName)}>Переименовать</AppButton>
+              <AppButton type="button" variant="ghost" onClick={() => duplicateActivePreset()}>Дублировать</AppButton>
+              <AppButton type="button" variant="ghost" onClick={() => deleteActivePreset()} disabled={isActivePresetLocked}>Удалить</AppButton>
+            </div>
+
+            <div>
+              <AppButton type="button" variant="ghost" onClick={() => createPreset(presetName || 'Новый пресет')}>
+                Создать новый пресет
+              </AppButton>
+            </div>
 
             <div className="grid gap-3 lg:grid-cols-3">
               {(Object.keys(PRIORITY_LABEL) as TelegramNotePriority[]).map((priority) => (
