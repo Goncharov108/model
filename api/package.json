@@ -9,6 +9,7 @@
     "dev": "node server.mjs",
     "check": "node --check server.mjs && node --check scripts/smoke.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "video:note": "python3 scripts/video_note.py",
     "test": "npm run check && npm run smoke"
   },
   "engines": {

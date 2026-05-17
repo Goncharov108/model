@@ -38,4 +38,26 @@ npm run test    # check + smoke
 
 Контракт: `openapi.yaml`.
 
+## Функция «ссылка на видео → текст + заметка»
+
+Добавлен CLI-скрипт: `api/scripts/video_note.py`.
+
+Что делает:
+- YouTube (`watch`, `youtu.be`, `shorts`): пытается взять субтитры и вернуть JSON с `transcript` + `note`.
+- Reels/другие соцссылки: честно сообщает, что нужен ASR-фолбэк (Whisper/Faster-Whisper).
+
+Быстрый запуск:
+
+```bash
+cd api
+pip install youtube-transcript-api
+npm run video:note -- "https://youtube.com/watch?v=VIDEO_ID"
+```
+
+Можно указать языки субтитров:
+
+```bash
+npm run video:note -- "https://youtube.com/shorts/VIDEO_ID" --language ru,en
+```
+
 Заготовка миграций и RLS: каталог `migrations/` и `docs/RLS_NOTES.md`.

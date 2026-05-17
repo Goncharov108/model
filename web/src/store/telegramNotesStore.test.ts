@@ -220,6 +220,32 @@ describe('telegramNotesStore', () => {
     expect(afterNames).toEqual(beforeNames)
   })
 
+  it('сухой прогон (preview) не меняет пресеты', () => {
+    const store = useTelegramNotesStore.getState()
+    store.createPreset('До dry-run')
+    const beforeNames = useTelegramNotesStore.getState().routingPresets.map((x) => x.name)
+
+    const payload = JSON.stringify({
+      version: 1,
+      presets: [
+        {
+          id: 'dry-1',
+          name: 'Новый из dry-run',
+          priorityToState: { high: 'in_work', normal: 'inbox', low: 'inbox' },
+          folderToState: { work: 'in_work' },
+          defaultState: 'inbox',
+        },
+      ],
+    })
+
+    const preview = store.previewImportPresets(payload, 'merge')
+    expect(preview.ok).toBe(true)
+
+    const afterNames = useTelegramNotesStore.getState().routingPresets.map((x) => x.name)
+    expect(afterNames).toEqual(beforeNames)
+    expect(afterNames).not.toContain('Новый из dry-run')
+  })
+
   it('сбрасывает пресеты к базовым', () => {
     const store = useTelegramNotesStore.getState()
     store.createPreset('Временный')

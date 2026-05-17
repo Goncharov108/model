@@ -86,6 +86,7 @@ export function MasterAdminIncomingWorkspace() {
   const [importConflictQuery, setImportConflictQuery] = useState('')
   const [importConflictSortField, setImportConflictSortField] = useState<'originalName' | 'finalName'>('originalName')
   const [importConflictSortDirection, setImportConflictSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [dryRunSummary, setDryRunSummary] = useState<string | null>(null)
   const [pendingImportPayload, setPendingImportPayload] = useState<string | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importDialogDescription, setImportDialogDescription] = useState('')
@@ -169,6 +170,47 @@ export function MasterAdminIncomingWorkspace() {
       setError(e instanceof Error ? e.message : 'Не удалось прочитать файл')
     } finally {
       setBusy(false)
+    }
+  }
+
+  function downloadConflictsTxt() {
+    if (importConflicts.length === 0) {
+      window.alert('Список конфликтов пуст')
+      return
+    }
+    const lines = importConflicts.map((item) => `${item.originalName} → ${item.finalName}`)
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = 'preset-import-conflicts.txt'
+    link.click()
+    URL.revokeObjectURL(link.href)
+  }
+
+  async function copyConflictLine(originalName: string, finalName: string) {
+    const line = `${originalName} → ${finalName}`
+    try {
+      await navigator.clipboard.writeText(line)
+      setImportSummary(`Скопировано: ${line}`)
+    } catch {
+      window.alert('Не удалось скопировать строку')
+    }
+  }
+
+  async function handleImportDryRun(file: File) {
+    try {
+      const text = await readTextFile(file)
+      const preview = previewImportPresets(text, importMode)
+      if (!preview.ok) {
+        window.alert(preview.error ?? 'Не удалось проверить файл')
+        return
+      }
+      const renamed = preview.items.filter((x) => x.willRename).length
+      setDryRunSummary(
+        `Сухой прогон: найдено ${preview.items.length} валидных, конфликтов ${renamed}, пропущено ${preview.skipped}. Без применения изменений.`,
+      )
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Ошибка чтения файла')
     }
   }
 
@@ -368,6 +410,7 @@ export function MasterAdminIncomingWorkspace() {
                         window.alert(preview.error ?? 'Не удалось прочитать пресеты')
                         return
                       }
+                      setDryRunSummary(null)
                       setImportPreview(preview.items)
 
                       const renamed = preview.items.filter((x) => x.willRename)
@@ -391,6 +434,20 @@ export function MasterAdminIncomingWorkspace() {
                   }}
                 />
               </label>
+              <label className="inline-flex cursor-pointer items-center rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2 text-xs text-zinc-200 hover:border-violet-500/50">
+                Сухой прогон
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    await handleImportDryRun(file)
+                    e.currentTarget.value = ''
+                  }}
+                />
+              </label>
               <AppButton
                 type="button"
                 variant="ghost"
@@ -401,6 +458,7 @@ export function MasterAdminIncomingWorkspace() {
                     return
                   }
                   setImportSummary('Последний импорт отменён')
+                  setDryRunSummary(null)
                   setImportPreview([])
                   setImportConflicts([])
                   setImportConflictQuery('')
@@ -423,6 +481,7 @@ export function MasterAdminIncomingWorkspace() {
             </div>
 
             {importSummary ? <p className="text-xs text-emerald-300">{importSummary}</p> : null}
+            {dryRunSummary ? <p className="text-xs text-sky-300">{dryRunSummary}</p> : null}
             {importPreview.length > 0 ? (
               <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300">
                 <p className="mb-2 text-zinc-400">Предпросмотр импорта (последний выбранный файл):</p>
@@ -603,13 +662,21 @@ export function MasterAdminIncomingWorkspace() {
                   </select>
                 </label>
               </div>
-              <p className="mb-2 text-[11px] text-zinc-500">
-                Показано: {sortedImportConflicts.length} из {importConflicts.length}
-              </p>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[11px] text-zinc-500">
+                  Показано: {sortedImportConflicts.length} из {importConflicts.length}
+                </p>
+                <AppButton type="button" variant="ghost" onClick={downloadConflictsTxt}>
+                  Экспорт конфликтов .txt
+                </AppButton>
+              </div>
               <ul className="max-h-56 space-y-1 overflow-auto pr-1 text-xs text-zinc-400">
                 {sortedImportConflicts.map((item, index) => (
-                  <li key={`${item.originalName}-${item.finalName}-${index}`} className="break-words">
-                    {item.originalName} → {item.finalName}
+                  <li key={`${item.originalName}-${item.finalName}-${index}`} className="flex items-start justify-between gap-2 break-words rounded border border-zinc-800 bg-zinc-900/60 p-2">
+                    <span className="min-w-0 break-words">{item.originalName} → {item.finalName}</span>
+                    <AppButton type="button" variant="ghost" onClick={() => void copyConflictLine(item.originalName, item.finalName)}>
+                      Скопировать
+                    </AppButton>
                   </li>
                 ))}
               </ul>
@@ -624,6 +691,7 @@ export function MasterAdminIncomingWorkspace() {
         onCancel={() => {
           setImportDialogOpen(false)
           setPendingImportPayload(null)
+          setDryRunSummary(null)
           setImportConflicts([])
           setImportConflictQuery('')
           setImportConflictSortField('originalName')
