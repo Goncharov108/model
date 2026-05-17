@@ -12,6 +12,7 @@ import { useTelegramNotesStore } from '../store/telegramNotesStore'
 import { AppButton } from '../ui/AppButton'
 import { PageHeader } from '../ui/PageHeader'
 import { SurfaceCard } from '../ui/SurfaceCard'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 
 const inputClass =
   'w-full rounded-lg border border-zinc-700 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 focus:border-violet-500/60 focus:outline-none focus:ring-2 focus:ring-violet-500/30'
@@ -81,6 +82,9 @@ export function MasterAdminIncomingWorkspace() {
   const [importMode, setImportMode] = useState<'replace' | 'merge'>('merge')
   const [importPreview, setImportPreview] = useState<{ originalName: string; finalName: string; willRename: boolean }[]>([])
   const [importSummary, setImportSummary] = useState<string | null>(null)
+  const [pendingImportPayload, setPendingImportPayload] = useState<string | null>(null)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [importDialogDescription, setImportDialogDescription] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -347,26 +351,19 @@ export function MasterAdminIncomingWorkspace() {
                       }
                       setImportPreview(preview.items)
 
-                      const confirmText = [
+                      const renamed = preview.items.filter((x) => x.willRename)
+                      const renamedExamples = renamed.slice(0, 5).map((x) => `• ${x.originalName} → ${x.finalName}`)
+                      const descriptionLines = [
                         `Будет добавлено: ${preview.items.length}`,
-                        `Переименовано из-за дублей: ${preview.items.filter((x) => x.willRename).length}`,
+                        `Переименовано из-за дублей: ${renamed.length}`,
                         `Пропущено невалидных: ${preview.skipped}`,
                         '',
-                        'Продолжить импорт?',
-                      ].join('\n')
-
-                      const ok = window.confirm(confirmText)
-                      if (!ok) return
-
-                      const result = importPresets(text, importMode)
-                      if (!result.ok) {
-                        window.alert(result.error ?? 'Не удалось импортировать пресеты')
-                        return
-                      }
-
-                      setImportSummary(
-                        `Импорт выполнен: добавлено ${result.added}, переименовано ${result.renamed}, пропущено ${result.skipped}`,
-                      )
+                        renamedExamples.length > 0 ? 'Примеры переименований:' : 'Переименований нет.',
+                        ...renamedExamples,
+                      ]
+                      setImportDialogDescription(descriptionLines.join('\n'))
+                      setPendingImportPayload(text)
+                      setImportDialogOpen(true)
                     } catch (err) {
                       window.alert(err instanceof Error ? err.message : 'Ошибка чтения файла')
                     } finally {
@@ -541,6 +538,30 @@ export function MasterAdminIncomingWorkspace() {
           </div>
         )}
       </SurfaceCard>
+
+      <ConfirmDialog
+        open={importDialogOpen}
+        title="Подтвердите импорт пресетов"
+        description={importDialogDescription}
+        confirmLabel="Импортировать"
+        cancelLabel="Отмена"
+        onCancel={() => {
+          setImportDialogOpen(false)
+          setPendingImportPayload(null)
+        }}
+        onConfirm={() => {
+          if (!pendingImportPayload) return
+          const result = importPresets(pendingImportPayload, importMode)
+          if (!result.ok) {
+            window.alert(result.error ?? 'Не удалось импортировать пресеты')
+            return
+          }
+          setImportSummary(
+            `Импорт выполнен: добавлено ${result.added}, переименовано ${result.renamed}, пропущено ${result.skipped}`,
+          )
+          setPendingImportPayload(null)
+        }}
+      />
     </div>
   )
 }
