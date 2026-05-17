@@ -32,6 +32,11 @@ const DEFAULT_PRESETS: TelegramRoutingRuleSet[] = [
 
 type QuickMode = 'workday' | 'incoming' | 'archive'
 
+interface TelegramPresetsExport {
+  version: 1
+  presets: TelegramRoutingRuleSet[]
+}
+
 interface TelegramNotesStoreState {
   snapshot: TelegramNotesSnapshot | null
   selectedIds: string[]
@@ -52,6 +57,9 @@ interface TelegramNotesStoreState {
   renameActivePreset: (name: string) => void
   deleteActivePreset: () => void
   applyQuickMode: (mode: QuickMode) => void
+  resetPresetsToDefault: () => void
+  exportPresets: () => TelegramPresetsExport
+  importPresets: (payload: string) => { ok: boolean; error?: string }
   applyAutoRouting: () => void
   clear: () => void
 }
@@ -80,6 +88,44 @@ const QUICK_MODE_PRESET: Record<QuickMode, string> = {
   workday: 'focus-work',
   incoming: 'balanced',
   archive: 'archive-mode',
+}
+
+function isValidState(value: unknown): value is TelegramNoteState {
+  return value === 'inbox' || value === 'in_work' || value === 'archived'
+}
+
+function normalizeImportedPresets(raw: unknown): TelegramRoutingRuleSet[] {
+  if (!raw || typeof raw !== 'object') return []
+  const presets = (raw as { presets?: unknown[] }).presets
+  if (!Array.isArray(presets)) return []
+
+  return presets
+    .map((preset) => {
+      if (!preset || typeof preset !== 'object') return null
+      const p = preset as Partial<TelegramRoutingRuleSet>
+      if (!p.name || typeof p.name !== 'string') return null
+      if (!p.priorityToState || !p.folderToState || !p.defaultState) return null
+      if (!isValidState(p.defaultState)) return null
+      return {
+        id: newId(),
+        name: sanitizeName(p.name),
+        locked: false,
+        priorityToState: {
+          high: isValidState((p.priorityToState as Record<string, unknown>)?.high) ? (p.priorityToState as Record<string, TelegramNoteState>).high : 'inbox',
+          normal: isValidState((p.priorityToState as Record<string, unknown>)?.normal) ? (p.priorityToState as Record<string, TelegramNoteState>).normal : 'inbox',
+          low: isValidState((p.priorityToState as Record<string, unknown>)?.low) ? (p.priorityToState as Record<string, TelegramNoteState>).low : 'inbox',
+        },
+        folderToState: {
+          ideas: isValidState((p.folderToState as Record<string, unknown>)?.ideas) ? (p.folderToState as Record<string, TelegramNoteState>).ideas : undefined,
+          work: isValidState((p.folderToState as Record<string, unknown>)?.work) ? (p.folderToState as Record<string, TelegramNoteState>).work : undefined,
+          finance: isValidState((p.folderToState as Record<string, unknown>)?.finance) ? (p.folderToState as Record<string, TelegramNoteState>).finance : undefined,
+          media: isValidState((p.folderToState as Record<string, unknown>)?.media) ? (p.folderToState as Record<string, TelegramNoteState>).media : undefined,
+          misc: isValidState((p.folderToState as Record<string, unknown>)?.misc) ? (p.folderToState as Record<string, TelegramNoteState>).misc : undefined,
+        },
+        defaultState: p.defaultState,
+      }
+    })
+    .filter((x): x is TelegramRoutingRuleSet => Boolean(x))
 }
 
 export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
@@ -200,6 +246,28 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
           const exists = store.routingPresets.some((p) => p.id === targetId)
           return { activePresetId: exists ? targetId : store.activePresetId }
         }),
+      resetPresetsToDefault: () => set({ routingPresets: DEFAULT_PRESETS, activePresetId: DEFAULT_PRESETS[0].id }),
+      exportPresets: () => {
+        const state = useTelegramNotesStore.getState()
+        return {
+          version: 1,
+          presets: state.routingPresets.filter((p) => !p.locked),
+        }
+      },
+      importPresets: (payload) => {
+        try {
+          const parsed = JSON.parse(payload)
+          const imported = normalizeImportedPresets(parsed)
+          if (imported.length === 0) return { ok: false, error: 'Не найдено валидных пресетов в файле' }
+          set((store) => ({
+            routingPresets: [...DEFAULT_PRESETS, ...imported],
+            activePresetId: imported[0].id,
+          }))
+          return { ok: true }
+        } catch {
+          return { ok: false, error: 'Некорректный JSON-файл' }
+        }
+      },
       applyAutoRouting: () =>
         set((store) => {
           if (!store.snapshot) return store

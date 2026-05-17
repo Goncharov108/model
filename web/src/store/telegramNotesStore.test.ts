@@ -118,4 +118,29 @@ describe('telegramNotesStore', () => {
     store.applyQuickMode('archive')
     expect(useTelegramNotesStore.getState().activePresetId).toBe('archive-mode')
   })
+
+  it('экспортирует только пользовательские пресеты и импортирует их обратно', () => {
+    const store = useTelegramNotesStore.getState()
+    store.createPreset('Экспортируемый')
+
+    const exported = store.exportPresets()
+    expect(exported.version).toBe(1)
+    expect(exported.presets.length).toBe(1)
+    expect(exported.presets[0]?.name).toBe('Экспортируемый')
+
+    store.resetPresetsToDefault()
+    const imported = store.importPresets(JSON.stringify(exported))
+    expect(imported.ok).toBe(true)
+    expect(useTelegramNotesStore.getState().routingPresets.some((x) => x.name === 'Экспортируемый')).toBe(true)
+  })
+
+  it('сбрасывает пресеты к базовым', () => {
+    const store = useTelegramNotesStore.getState()
+    store.createPreset('Временный')
+    expect(useTelegramNotesStore.getState().routingPresets.some((x) => x.name === 'Временный')).toBe(true)
+
+    store.resetPresetsToDefault()
+    expect(useTelegramNotesStore.getState().routingPresets.some((x) => x.name === 'Временный')).toBe(false)
+    expect(useTelegramNotesStore.getState().activePresetId).toBe('balanced')
+  })
 })

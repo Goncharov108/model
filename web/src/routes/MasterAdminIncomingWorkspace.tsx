@@ -58,6 +58,9 @@ export function MasterAdminIncomingWorkspace() {
   const renameActivePreset = useTelegramNotesStore((s) => s.renameActivePreset)
   const deleteActivePreset = useTelegramNotesStore((s) => s.deleteActivePreset)
   const applyQuickMode = useTelegramNotesStore((s) => s.applyQuickMode)
+  const resetPresetsToDefault = useTelegramNotesStore((s) => s.resetPresetsToDefault)
+  const exportPresets = useTelegramNotesStore((s) => s.exportPresets)
+  const importPresets = useTelegramNotesStore((s) => s.importPresets)
   const setItemState = useTelegramNotesStore((s) => s.setItemState)
   const setItemFolder = useTelegramNotesStore((s) => s.setItemFolder)
   const applyStateToSelected = useTelegramNotesStore((s) => s.applyStateToSelected)
@@ -277,12 +280,66 @@ export function MasterAdminIncomingWorkspace() {
               </label>
               <AppButton type="button" variant="ghost" onClick={() => renameActivePreset(presetName)}>Переименовать</AppButton>
               <AppButton type="button" variant="ghost" onClick={() => duplicateActivePreset()}>Дублировать</AppButton>
-              <AppButton type="button" variant="ghost" onClick={() => deleteActivePreset()} disabled={isActivePresetLocked}>Удалить</AppButton>
+              <AppButton
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  if (isActivePresetLocked) return
+                  const ok = window.confirm('Удалить текущий пользовательский пресет? Это действие нельзя отменить.')
+                  if (ok) deleteActivePreset()
+                }}
+                disabled={isActivePresetLocked}
+              >
+                Удалить
+              </AppButton>
             </div>
 
-            <div>
+            <div className="flex flex-wrap gap-2">
               <AppButton type="button" variant="ghost" onClick={() => createPreset(presetName || 'Новый пресет')}>
                 Создать новый пресет
+              </AppButton>
+              <AppButton
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  const payload = JSON.stringify(exportPresets(), null, 2)
+                  const blob = new Blob([payload], { type: 'application/json' })
+                  const link = document.createElement('a')
+                  link.href = URL.createObjectURL(blob)
+                  link.download = 'telegram-routing-presets.json'
+                  link.click()
+                  URL.revokeObjectURL(link.href)
+                }}
+              >
+                Экспорт пресетов
+              </AppButton>
+              <label className="inline-flex cursor-pointer items-center rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2 text-xs text-zinc-200 hover:border-violet-500/50">
+                Импорт пресетов
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const text = await readTextFile(file)
+                    const result = importPresets(text)
+                    if (!result.ok) {
+                      window.alert(result.error ?? 'Не удалось импортировать пресеты')
+                    }
+                    e.currentTarget.value = ''
+                  }}
+                />
+              </label>
+              <AppButton
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  const ok = window.confirm('Сбросить все пресеты к базовым? Пользовательские пресеты будут удалены.')
+                  if (ok) resetPresetsToDefault()
+                }}
+              >
+                Сброс к базовым
               </AppButton>
             </div>
 
