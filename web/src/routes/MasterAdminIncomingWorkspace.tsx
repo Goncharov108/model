@@ -84,6 +84,8 @@ export function MasterAdminIncomingWorkspace() {
   const [importSummary, setImportSummary] = useState<string | null>(null)
   const [importConflicts, setImportConflicts] = useState<{ originalName: string; finalName: string }[]>([])
   const [importConflictQuery, setImportConflictQuery] = useState('')
+  const [importConflictSortField, setImportConflictSortField] = useState<'originalName' | 'finalName'>('originalName')
+  const [importConflictSortDirection, setImportConflictSortDirection] = useState<'asc' | 'desc'>('asc')
   const [pendingImportPayload, setPendingImportPayload] = useState<string | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importDialogDescription, setImportDialogDescription] = useState('')
@@ -137,6 +139,16 @@ export function MasterAdminIncomingWorkspace() {
     if (!q) return importConflicts
     return importConflicts.filter((item) => `${item.originalName} ${item.finalName}`.toLowerCase().includes(q))
   }, [importConflictQuery, importConflicts])
+  const sortedImportConflicts = useMemo(() => {
+    const sorted = [...filteredImportConflicts].sort((a, b) => {
+      const left = a[importConflictSortField].toLocaleLowerCase('ru')
+      const right = b[importConflictSortField].toLocaleLowerCase('ru')
+      if (left < right) return importConflictSortDirection === 'asc' ? -1 : 1
+      if (left > right) return importConflictSortDirection === 'asc' ? 1 : -1
+      return 0
+    })
+    return sorted
+  }, [filteredImportConflicts, importConflictSortDirection, importConflictSortField])
 
   useEffect(() => {
     setPresetName(activePreset?.name ?? '')
@@ -368,6 +380,8 @@ export function MasterAdminIncomingWorkspace() {
                       setImportDialogDescription(descriptionLines.join('\n'))
                       setPendingImportPayload(text)
                       setImportConflictQuery('')
+                      setImportConflictSortField('originalName')
+                      setImportConflictSortDirection('asc')
                       setImportDialogOpen(true)
                     } catch (err) {
                       window.alert(err instanceof Error ? err.message : 'Ошибка чтения файла')
@@ -390,6 +404,8 @@ export function MasterAdminIncomingWorkspace() {
                   setImportPreview([])
                   setImportConflicts([])
                   setImportConflictQuery('')
+                  setImportConflictSortField('originalName')
+                  setImportConflictSortDirection('asc')
                 }}
               >
                 Отменить последний импорт
@@ -563,17 +579,41 @@ export function MasterAdminIncomingWorkspace() {
                   placeholder="Введите часть старого или нового имени…"
                 />
               </label>
+              <div className="mb-2 grid gap-2 sm:grid-cols-2">
+                <label className="text-xs text-zinc-400">
+                  Сортировать по
+                  <select
+                    className="mt-1 w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs text-zinc-100"
+                    value={importConflictSortField}
+                    onChange={(e) => setImportConflictSortField(e.target.value as 'originalName' | 'finalName')}
+                  >
+                    <option value="originalName">Старому имени</option>
+                    <option value="finalName">Новому имени</option>
+                  </select>
+                </label>
+                <label className="text-xs text-zinc-400">
+                  Порядок
+                  <select
+                    className="mt-1 w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs text-zinc-100"
+                    value={importConflictSortDirection}
+                    onChange={(e) => setImportConflictSortDirection(e.target.value as 'asc' | 'desc')}
+                  >
+                    <option value="asc">А → Я</option>
+                    <option value="desc">Я → А</option>
+                  </select>
+                </label>
+              </div>
               <p className="mb-2 text-[11px] text-zinc-500">
-                Показано: {filteredImportConflicts.length} из {importConflicts.length}
+                Показано: {sortedImportConflicts.length} из {importConflicts.length}
               </p>
               <ul className="max-h-56 space-y-1 overflow-auto pr-1 text-xs text-zinc-400">
-                {filteredImportConflicts.map((item, index) => (
+                {sortedImportConflicts.map((item, index) => (
                   <li key={`${item.originalName}-${item.finalName}-${index}`} className="break-words">
                     {item.originalName} → {item.finalName}
                   </li>
                 ))}
               </ul>
-              {filteredImportConflicts.length === 0 ? (
+              {sortedImportConflicts.length === 0 ? (
                 <p className="mt-2 text-xs text-zinc-500">Ничего не найдено по текущему запросу.</p>
               ) : null}
             </div>
@@ -586,6 +626,8 @@ export function MasterAdminIncomingWorkspace() {
           setPendingImportPayload(null)
           setImportConflicts([])
           setImportConflictQuery('')
+          setImportConflictSortField('originalName')
+          setImportConflictSortDirection('asc')
         }}
         onConfirm={() => {
           if (!pendingImportPayload) return
