@@ -1,0 +1,194 @@
+---
+title: "Структура репозитория model"
+tags: [meta, структура]
+auto: "scripts/update-vault-structure.sh"
+---
+
+# Структура проекта model
+
+> Файл **генерируется** скриптом `scripts/update-vault-structure.sh`. Личные пометки к структуре — в отдельной заметке (например в `journal/`). Содержимое `private/` в дерево не входит (закон 1).
+
+```text
+.cursor/
+  rules/
+    private-user-text.mdc
+.github/
+  workflows/
+    ci.yml
+.gitignore
+.nvmrc
+CANON_PROJECT_MASTER.txt
+CANON_SECONDARY_MASTER.txt
+PLAN_REALIZATSII.md
+PROJECT_LAW.txt
+README.md
+SWOD_ZAKONOV.txt
+api/
+  README.md
+  docs/
+    RLS_NOTES.md
+  migrations/
+    README.md
+  openapi.yaml
+  package.json
+  server.mjs
+docs/
+  environment/
+    DEPLOY.md
+    DNS_REG_RU.md
+    GITHUB.md
+    README.md
+    SERVER.md
+    STACK.md
+private/
+  .gitkeep
+web/
+  .env.example
+  .gitignore
+  README.md
+  docs/
+    UI_OVERVIEW.md
+  eslint.config.js
+  index.html
+  package-lock.json
+  package.json
+  public/
+    favicon.svg
+  src/
+    AppRoutes.tsx
+    analysis/
+      import/
+        parseExternalAnalysisJson.test.ts
+        parseExternalAnalysisJson.ts
+      metrics/
+        computeTextMetrics.ts
+        topKeywords.ts
+      pipeline/
+        runAnalysisPipeline.ts
+      stopwords.ts
+      text/
+        countWords.ts
+        normalizeInputText.ts
+        splitParagraphChunks.ts
+        splitSentences.ts
+        tokenizeWords.ts
+      themeBlockLink.test.ts
+      themeBlockLink.ts
+    components/
+      account/
+        PhotoDropZone.tsx
+        ProfileAvatar.tsx
+      analysis/
+        AnalysisBlocksOutline.tsx
+        ThemeBlockAnchors.tsx
+      domain/
+        canonDomainLabels.ts
+      environment/
+        EnvironmentStackTable.tsx
+      orchestra/
+        OrchestraAgentRow.tsx
+        OrchestraTicketRow.tsx
+      planning/
+        PlanningQuestionCard.tsx
+      shell/
+        AccountProfileBlock.tsx
+        MainSidebar.tsx
+        MasterAdminSidebar.tsx
+        shellLayout.ts
+      stream/
+        ActiveStructureBanner.tsx
+    data/
+      canonProjectMasterExternalAnalysis.v1.json
+      canonSecondaryExternalAnalysis.v1.json
+      environmentDocsDefaults.ts
+      orchestraDefaults.ts
+      planningQuestionnaire.ts
+      promptStructureSeeds.ts
+    domain/
+      activeStructureContext.ts
+      analysisTypes.ts
+      appUser.ts
+      canonDomainModel.test.ts
+      canonDomainModel.ts
+      environmentDocs.ts
+      orchestra.ts
+      planningQuestion.ts
+      promptStructure.ts
+    index.css
+    layouts/
+      AdvancedSettingsShell.tsx
+      AppShell.tsx
+    lib/
+      appPaths.ts
+      appUserLabels.ts
+      appendStreamTemplate.test.ts
+      appendStreamTemplate.ts
+      canonDomainOps.test.ts
+      canonDomainOps.ts
+      copyToClipboard.ts
+      downloadJson.ts
+      environmentDocsSnapshot.test.ts
+      environmentDocsSnapshot.ts
+      formatInt.ts
+      newId.ts
+      orchestraSnapshot.test.ts
+      orchestraSnapshot.ts
+      planningSnapshot.test.ts
+      planningSnapshot.ts
+      promptStructuresFilter.test.ts
+      promptStructuresFilter.ts
+      readImageAsDataUrl.ts
+      readTextFile.ts
+      structureNotes.test.ts
+      structureNotes.ts
+      usersDatabaseFilter.test.ts
+      usersDatabaseFilter.ts
+      workspaceBrowserSnapshot.ts
+    main.tsx
+    routes/
+      AccountSettingsWorkspace.tsx
+      AdminPanelWorkspace.tsx
+      DomainWorkspace.tsx
+      HelpWorkspace.tsx
+      HomeWorkspace.tsx
+      MasterAdminEnvironmentWorkspace.tsx
+      MasterAdminOverviewWorkspace.tsx
+      MasterAdminUsersWorkspace.tsx
+      OrchestraWorkspace.tsx
+      PlanningQuestionnaireWorkspace.tsx
+      PromptStructuresWorkspace.tsx
+      StreamWorkspace.tsx
+    store/
+      accountStore.ts
+      analysisSessionStore.ts
+      canonDomainStore.ts
+      environmentDocsStore.ts
+      orchestraStore.ts
+      planningAnswersStore.ts
+      promptStructuresStore.ts
+      streamWorkspaceStore.ts
+      structureNotesStore.ts
+      usersDatabaseStore.ts
+    ui/
+      AppButton.tsx
+      ConfirmDialog.tsx
+      PageHeader.tsx
+      SurfaceCard.tsx
+      sidebarNav.ts
+  tsconfig.app.json
+  tsconfig.json
+  tsconfig.node.json
+  vite.config.ts
+```
+
+## Связи
+
+Карта хранилища: [[00-индекс]]. Разделы: [[Канон]], [[Инфраструктура]], [[Журнал]], [[Model-доки]], [[Промпты]].
+
+## Обновить в Obsidian
+
+В терминале из корня `model`:
+
+```bash
+./scripts/update-vault-structure.sh
+```

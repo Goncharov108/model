@@ -90,7 +90,7 @@ flowchart TB
 | `/domain` | Домен | `web/src/routes/DomainWorkspace.tsx` | Прототип слоёв и субъектов канона-3 |
 | `/help` | Справка | `web/src/routes/HelpWorkspace.tsx` | Краткий онбординг; полный текст — `web/docs/UI_OVERVIEW.md` |
 
-**Мастер-админ** (`/master-admin/*`): боковая панель с вкладками верхнего уровня — «Обзор», **«Окружение»** (`/master-admin/environment`, `MasterAdminEnvironmentWorkspace.tsx`), «Пользователи», «Продвинутые настройки» (Поток, Структуры, …). Вкладка **«Окружение»** — единая документация по стеку, GitHub CI, домену reg.ru и серверу: редактируемые карточки, persist `model-environment-docs-v1`, экспорт/импорт JSON (version 1), кнопка «Скопировать чеклист деплоя»; зеркало без секретов — `docs/environment/` в Git.
+**Мастер-админ** (`/master-admin/*`): оверлейная панель (amber) поверх главного меню. Вкладки: «Обзор», **«Окружение»**, «Пользователи», «Продвинутые настройки» (подменю: Поток, Структуры, План, Оркестр, Домен, Справка). Полный бриф для дизайнера: `docs/design/MASTER_ADMIN_DESIGNER_PROMPT.md`. Инфраструктура и деплой: `docs/INFRASTRUCTURE_LOG.md`, `docs/environment/`.
 
 **Оболочка:** `web/src/layouts/AppShell.tsx` — sticky-шапка «Рабочее место», вкладки разделов, skip-link **«К основному содержимому»** → `#main-content`. **Нет** логина и мультитенанта.
 

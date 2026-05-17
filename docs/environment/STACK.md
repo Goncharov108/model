@@ -1,32 +1,30 @@
 # Стек приложения
 
-Имя репозитория: **model**. Monorepo: `web/` + `api/`.
+Monorepo **model**: `web/` + `api/`.
 
-## Сейчас на сервере / в проде
+## Сейчас на сервере (прод)
 
 | Слой | Технология | Версия | Где | Заметка |
 |------|------------|--------|-----|---------|
-| *(заполнить после деплоя)* | | | | |
+| ОС | Ubuntu | 24.04 LTS | VPS ztv NL-8 | 104.171.141.49 |
+| Web (статика) | Vite build → HTML/JS/CSS | из коммита main | `/var/www/model/web` | nginx |
+| API | Node `http` placeholder | server.mjs | `/opt/model/api` | systemd, :3847 |
+| Прокси | nginx | 1.24 | `/etc/nginx/sites-available/model` | `/api/` → backend |
+| Node runtime | NodeSource | v22.x | сервер | |
+| TLS | — | — | — | certbot после DNS |
 
 ## В репозитории (локально / CI)
 
-| Слой | Технология | Версия | Где | Заметка |
-|------|------------|--------|-----|---------|
-| Web UI | Vite + React + TypeScript | vite ^8.0.12, react ^19.2.6, TS ~6.0.2 | `web/` | SWOD закон 6 |
-| Маршрутизация | react-router-dom | ^7.15.1 | `web/` | |
-| Состояние | zustand + persist | ^5.0.13 | `web/src/store/` | localStorage |
-| Стили | Tailwind CSS | ^4.3.0 | `web/` | @tailwindcss/vite |
-| API | Node `http` (placeholder) | `server.mjs` | `api/` | `GET /health`, PORT **3847** |
-| Node (целевой) | — | **22** (`.nvmrc`) | корень | engines web: >=20 |
-| CI | GitHub Actions | workflow `CI` | `.github/workflows/ci.yml` | lint, test, build, api-smoke |
+| Слой | Технология | Версия | Где |
+|------|------------|--------|-----|
+| Web UI | Vite + React + TS | vite ^8, react ^19 | `web/` |
+| Маршрутизация | react-router-dom | ^7.15 | `web/` |
+| Состояние | zustand + persist | ^5.0 | `web/src/store/` |
+| Стили | Tailwind CSS | ^4.3 | `web/` |
+| API | Node placeholder | server.mjs | `api/` |
+| Node | .nvmrc | 22 | корень |
+| CI | GitHub Actions | CI workflow | `.github/workflows/ci.yml` |
 
-## Запланировано по канону-3
+## Запланировано (канон-3)
 
-См. `CANON_PROJECT_MASTER.txt` (продукт «Мастер», не имя репозитория). **Не внедрять всё сразу** — только документировать:
-
-- Keycloak (IAM, OIDC)
-- OpenFGA (ReBAC)
-- PostgreSQL + RLS
-- MinIO / Nextcloud
-- NestJS backend (вместо placeholder)
-- Matrix/Synapse, Ollama, Telegram Bot API — стратегический контур
+См. `CANON_PROJECT_MASTER.txt` — Keycloak, OpenFGA, PostgreSQL, MinIO, NestJS, … **не внедрять без плана**.

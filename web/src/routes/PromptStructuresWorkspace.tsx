@@ -12,7 +12,6 @@ import { useStreamWorkspaceStore } from '../store/streamWorkspaceStore'
 import { useStructureNotesStore } from '../store/structureNotesStore'
 import type { PromptStructureItem } from '../domain/promptStructure'
 import { AppButton } from '../ui/AppButton'
-import { PageHeader } from '../ui/PageHeader'
 
 type CopyFeedback = { id: string; kind: 'id' | 'summary' } | null
 
@@ -53,13 +52,7 @@ export function PromptStructuresWorkspace() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
-      <PageHeader
-        eyebrow="Реестр из промптов"
-        title="Структуры из промптов"
-        description="Опорные каркасы из подтверждённых промптов: поиск по реестру, заметки только в этом браузере, копирование формулировок в чат Cursor. Сиды в коде не редактируются здесь."
-      />
-
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
       <section
         className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 sm:p-5"
         aria-label="Поиск и фильтр"

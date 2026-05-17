@@ -10,7 +10,6 @@ import {
 import { useCanonDomainStore } from '../store/canonDomainStore'
 import { AppButton } from '../ui/AppButton'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
-import { PageHeader } from '../ui/PageHeader'
 import { SurfaceCard } from '../ui/SurfaceCard'
 
 const inputClass =
@@ -88,12 +87,6 @@ export function DomainWorkspace() {
           setFormError(null)
           setResetOpen(false)
         }}
-      />
-
-      <PageHeader
-        eyebrow="Канон-3 · прототип"
-        title="Домен доступа"
-        description="Черновой словарь слоёв и субъектов из canonDomainModel.ts — только визуализация и локальное добавление. OpenFGA и Keycloak не подключены; отношения ReBAC пока только в типах."
       />
 
       <div className="grid gap-3 sm:grid-cols-3">

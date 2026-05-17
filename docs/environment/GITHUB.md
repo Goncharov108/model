@@ -2,36 +2,24 @@
 
 | Поле | Значение |
 |------|----------|
-| Владелец (slug) | `Goncharov108` *(уточнить, если на GitHub другое написание)* |
-| Имя репозитория | `model` |
-| Видимость | **private** |
+| Владелец | Goncharov108 |
+| Репозиторий | **model** (private) |
 | URL | https://github.com/Goncharov108/model |
-| Ветка по умолчанию | `main` |
-| Workflow CI | `.github/workflows/ci.yml` (имя workflow: **CI**) |
+| Ветка | `main` |
+| Workflow | `.github/workflows/ci.yml` (**CI**) |
 
-## Jobs CI
+## CI
 
-- **web:** `npm ci`, `lint`, `test`, `build` (каталог `web/`, Node из `.nvmrc`)
-- **api-smoke:** запуск `api/server.mjs`, проверка `GET /health`
+- **web:** `npm ci`, lint, test, build
+- **api-smoke:** `node api/server.mjs`, `GET /health`
 
-## Remote (локальная машина)
+Статус: зелёный после push (2026-05-15).
 
-Проверка: `git remote -v`
-
-Если remote ещё нет:
+## Локальный remote
 
 ```bash
-git remote add origin https://github.com/Goncharov108/model.git
-git push -u origin main
+git remote -v
+# origin  https://github.com/Goncharov108/model.git
 ```
 
-Или через CLI (при авторизации `gh`):
-
-```bash
-gh repo create Goncharov108/model --private --source=. --remote=origin
-git push -u origin main
-```
-
-**Push только по явному запросу владельца.** Force push в `main` — не без отдельного согласия.
-
-После первого push — убедиться, что workflow **CI** зелёный на GitHub Actions.
+Авторизация: `gh auth` (scopes: `repo`, `workflow`, `gist`, `read:org`).

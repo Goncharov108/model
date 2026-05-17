@@ -1,0 +1,7 @@
+# Локальное состояние Obsidian (не коммитить)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/graph.json
+.obsidian/appearance.json
+.obsidian/community-plugins.json
+.obsidian/plugins/*/data.json

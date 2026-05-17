@@ -9,6 +9,8 @@ import { HomeWorkspace } from './routes/HomeWorkspace'
 import { AccountSettingsWorkspace } from './routes/AccountSettingsWorkspace'
 import { MasterAdminEnvironmentWorkspace } from './routes/MasterAdminEnvironmentWorkspace'
 import { MasterAdminOverviewWorkspace } from './routes/MasterAdminOverviewWorkspace'
+import { MasterAdminHermesWorkspace } from './routes/MasterAdminHermesWorkspace'
+import { MasterAdminPhilosophyWorkspace } from './routes/MasterAdminPhilosophyWorkspace'
 import { MasterAdminUsersWorkspace } from './routes/MasterAdminUsersWorkspace'
 import { OrchestraWorkspace } from './routes/OrchestraWorkspace'
 import { PlanningQuestionnaireWorkspace } from './routes/PlanningQuestionnaireWorkspace'
@@ -34,6 +36,8 @@ export function AppRoutes() {
           <Route path="overview" element={<MasterAdminOverviewWorkspace />} />
           <Route path="environment" element={<MasterAdminEnvironmentWorkspace />} />
           <Route path="users" element={<MasterAdminUsersWorkspace />} />
+          <Route path="philosophy" element={<MasterAdminPhilosophyWorkspace />} />
+          <Route path="hermes" element={<MasterAdminHermesWorkspace />} />
           <Route path="advanced" element={<AdvancedSettingsShell />}>
             <Route index element={<StreamWorkspace />} />
             <Route path="structures" element={<PromptStructuresWorkspace />} />

@@ -1,11 +1,15 @@
 {
   "name": "model-api-placeholder",
   "private": true,
-  "version": "0.0.0",
-  "description": "Заготовка HTTP-сервиса до выбора NestJS/стека (фаза 4 плана).",
+  "version": "0.1.0",
+  "description": "Минимальный HTTP-сервис model API с проверками запуска.",
   "type": "module",
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "check": "node --check server.mjs && node --check scripts/smoke.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "test": "npm run check && npm run smoke"
   },
   "engines": {
     "node": ">=20"

@@ -1,29 +1,69 @@
-# Деплой v1
+# Деплой
 
-Цель: статика `web/dist` + health API `GET /api/health` (через nginx).
+Цель: `web/dist` + API (`/api/health`, `/api/v1/text/inspect`) + nginx (SPA, `/api/`, `/hermes/`).
 
-## Предусловия
+## Статус инфраструктуры
 
-- SSH-доступ по ключу (не пароль в репозитории)
-- Node 22, nginx, certbot
-- Пользователь `deploy` и каталоги из [SERVER.md](./SERVER.md)
+- [x] VPS **104.171.141.49**, Ubuntu 24.04, пользователь `deploy`
+- [x] Node 22, nginx, **model-api** (порт 3847)
+- [x] Hermes dashboard `:9119`, префикс `/hermes/`
+- [ ] DNS **live-model.ru** → IP (проверить у регистратора)
+- [ ] certbot HTTPS
 
-## Шаги
+## Деплой с Mac (рекомендуется)
 
-1. Локально или в CI: `cd web && npm ci && npm run build`
-2. Скопировать `web/dist/` на сервер → `/var/www/model/web`
-3. Скопировать `api/` (без `private/`) → `/opt/model/api`
-4. systemd unit для `node server.mjs` (слушать `127.0.0.1:3847`)
-5. nginx: SPA `try_files` + proxy `/api/` → backend
-6. DNS на reg.ru → [DNS_REG_RU.md](./DNS_REG_RU.md)
-7. certbot → HTTPS (`live-model.ru`, `www.live-model.ru`)
-8. Проверка: `curl -I https://live-model.ru` и `curl https://live-model.ru/api/health`
+Из корня репозитория:
 
-## Не копировать на сервер
+```bash
+# только web + api (как в законе 15 для UI)
+./scripts/deploy/deploy.sh
 
-- `private/`
-- `.env` с секретами из репозитория (создать отдельный env на сервере)
+# + обновить nginx (после правок scripts/deploy/nginx-model.conf)
+DEPLOY_NGINX=1 ./scripts/deploy/deploy.sh
 
-## CI/CD v2 (опционально)
+# только статика
+SKIP_API=1 ./scripts/deploy/deploy.sh
+```
 
-Workflow `deploy.yml` на `main`: build + rsync/scp через GitHub Secrets (`SSH_HOST`, `SSH_USER`, `SSH_KEY`) — после ручного деплоя v1 и по запросу владельца.
+Переменные:
+
+| Переменная | По умолчанию | Назначение |
+|------------|--------------|------------|
+| `DEPLOY_HOST` | `104.171.141.49` | IP или хост |
+| `DEPLOY_USER` | `root` | SSH-пользователь |
+| `SSH_KEY` | `~/.ssh/id_ed25519` | Ключ |
+| `DEPLOY_NGINX` | `0` | `1` — выкатить `nginx-model.conf` и reload |
+| `SKIP_WEB` / `SKIP_API` | `0` | `1` — пропустить часть |
+
+Алиас: `./scripts/deploy_v1.sh` → тот же скрипт.
+
+После выкладки UI: **Cmd+Shift+R** в браузере.
+
+## Проверка
+
+```bash
+curl -s http://104.171.141.49/api/health
+curl -s -X POST http://104.171.141.49/api/v1/text/inspect \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"проверка после деплоя"}'
+```
+
+## Скрипты первичной настройки сервера
+
+| Файл | Назначение |
+|------|------------|
+| `scripts/deploy/bootstrap-ubuntu.sh` | Пакеты (может быть интерактивен) |
+| `scripts/deploy/setup-server-noninteractive.sh` | Донастройка без вопросов |
+| `scripts/deploy/nginx-model.conf` | Виртуальный хост |
+| `scripts/deploy/model-api.service` | systemd unit API |
+| `scripts/deploy/hermes-dashboard.service` | systemd Hermes |
+
+## Hermes (Telegram) и Git
+
+- На VPS клон: `/home/hermes/vault/Projects/model`, ветка **`hermes/work`**
+- Deploy key **hermes-vps-deploy** → push в `origin/hermes/work`
+- В Cursor: `./scripts/sync/pull-hermes-from-vps.sh`, журнал `docs/sync/HERMES_HANDOFF.md`
+
+## Не копировать
+
+- `private/`, секреты в `.env` на сервере — отдельно

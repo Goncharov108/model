@@ -28,19 +28,20 @@ export function createDefaultEnvironmentDocs(): EnvironmentDocsData {
     domain: {
       domainName: 'live-model.ru',
       dnsRecords:
-        '@ → A на IP сервера (после подключения)\nwww → CNAME live-model.ru или A на тот же IP',
-      sslStatus: 'не выпущен (сервер пока не подключён)',
+        '@ → A 104.171.141.49\nwww → A 104.171.141.49 (или CNAME на live-model.ru)',
+      sslStatus: 'не выпущен (после nginx + certbot)',
       sslCheckedAt: '',
       notes: 'Регистратор reg.ru. A-запись — когда будет IP VPS.',
     },
     server: {
-      host: '',
-      os: 'Ubuntu 22.04 LTS (целевое)',
-      sshUser: 'deploy',
+      host: '104.171.141.49',
+      os: 'Ubuntu 24.04 LTS (ztv NL-8-NVMe)',
+      sshUser: 'root → затем deploy',
       deployWebPath: '/var/www/model/web',
       deployApiPath: '/opt/model/api',
       nodeVersion: '22 (.nvmrc в корне репозитория)',
-      notes: 'Сервер пока не подключён. Пароли и ключи — только на сервере / в private/, не в UI.',
+      notes:
+        'Hostname: vps1778841729.tech0.ru. Панель ztv.su. Пароль root — из письма/ЛК, не в Git.',
     },
     stack: {
       plannedCanonRef: 'CANON_PROJECT_MASTER.txt — Keycloak, OpenFGA, PostgreSQL, MinIO, Nextcloud, …',

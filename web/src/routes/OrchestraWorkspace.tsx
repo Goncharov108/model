@@ -7,7 +7,6 @@ import { downloadJson } from '../lib/downloadJson'
 import { useOrchestraStore } from '../store/orchestraStore'
 import { AppButton } from '../ui/AppButton'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
-import { PageHeader } from '../ui/PageHeader'
 import { SurfaceCard } from '../ui/SurfaceCard'
 
 /** Экран режима «Оркестр»: роли агентов, задачи и заметки дирижёра с персистентностью в браузере. */
@@ -69,12 +68,7 @@ export function OrchestraWorkspace(): JSX.Element {
           setImportError(null)
         }}
       />
-      <PageHeader
-        eyebrow="Режим оркестра"
-        title="Дорожки для вложенных агентов"
-        description="Репозиторий кода — model. Здесь вы фиксируете роли, задачи и статусы для параллельной работы в Cursor. Приложение агентов не запускает; данные — model-orchestra-v1 в этом браузере."
-      />
-      <section className="-mt-4 space-y-3 border-b border-zinc-800 pb-8">
+      <section className="space-y-3 border-b border-zinc-800 pb-8">
         <details className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3 text-sm text-zinc-400">
           <summary className="cursor-pointer text-zinc-200">Подсказка по типам в Cursor</summary>
           <ul className="mt-2 list-disc space-y-1 pl-5">

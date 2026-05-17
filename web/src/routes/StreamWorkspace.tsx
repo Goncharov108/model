@@ -2,6 +2,7 @@ import { useId, useRef, useState } from 'react'
 import { AnalysisBlocksOutline } from '../components/analysis/AnalysisBlocksOutline'
 import { ThemeBlockAnchors } from '../components/analysis/ThemeBlockAnchors'
 import { ActiveStructureBanner } from '../components/stream/ActiveStructureBanner'
+import { StreamOnboardingPanel } from '../components/stream/StreamOnboardingPanel'
 import { countWords } from '../analysis/text/countWords'
 import bundledCanonProjectMasterV1 from '../data/canonProjectMasterExternalAnalysis.v1.json'
 import bundledCanonSecondaryV1 from '../data/canonSecondaryExternalAnalysis.v1.json'
@@ -13,7 +14,6 @@ import { useAnalysisSessionStore } from '../store/analysisSessionStore'
 import { useStreamWorkspaceStore } from '../store/streamWorkspaceStore'
 import { AppButton } from '../ui/AppButton'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
-import { PageHeader } from '../ui/PageHeader'
 import { SurfaceCard } from '../ui/SurfaceCard'
 
 const JSON_PLACEHOLDER = `{
@@ -81,7 +81,7 @@ export function StreamWorkspace() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
       <ConfirmDialog
         open={clearAnalysisOpen}
         title="Сбросить анализ?"
@@ -94,12 +94,6 @@ export function StreamWorkspace() {
           setImportError(null)
         }}
       />
-      <PageHeader
-        eyebrow="Локальное рабочее место"
-        title="Структурирование потока сознания"
-        description="Вставь фундаментальный текст или загрузи файл — локальный анализ разложит поток на блоки и метрики. JSON глубокого разбора от модели/агента можно импортировать отдельным слоем для дальнейшей корректировки."
-      />
-
       {activeStructure ? (
         <ActiveStructureBanner
           structure={activeStructure}
@@ -107,7 +101,14 @@ export function StreamWorkspace() {
         />
       ) : null}
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <StreamOnboardingPanel
+        hasText={!!masterRawText.trim()}
+        hasLocalAnalysis={!!local}
+        onPickFile={() => fileInputRef.current?.click()}
+        onRunLocalAnalysis={() => runLocal(masterRawText)}
+      />
+
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {OVERVIEW_CARDS.map((card) => (
           <SurfaceCard key={card.title} title={card.title} description={card.description} />
         ))}
@@ -119,9 +120,9 @@ export function StreamWorkspace() {
       />
 
       <section className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <h2 className="text-sm font-semibold text-zinc-200">Источник текста</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <AppButton variant="ghost" type="button" onClick={() => fileInputRef.current?.click()}>
               Загрузить .txt
             </AppButton>
@@ -267,7 +268,7 @@ export function StreamWorkspace() {
                   <li
                     key={block.id}
                     id={`analysis-block-${block.index}`}
-                    className="scroll-mt-28 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-left"
+                    className="scroll-mt-36 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-left lg:scroll-mt-28"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
                       <span>

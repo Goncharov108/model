@@ -1,17 +1,9 @@
-import { PageHeader } from '../ui/PageHeader'
-
 const REPO_OVERVIEW_PATH = 'web/docs/UI_OVERVIEW.md'
 
 /** Краткая справка по приложению; полный текст — в репозитории. */
 export function HelpWorkspace() {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
-      <PageHeader
-        eyebrow="Справка"
-        title="Рабочее место model"
-        description="Локальный UI в каталоге web/: четыре вкладки, данные в браузере (localStorage), без облака и без запуска агентов Cursor из браузера."
-      />
-
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
       <section className="space-y-4 text-sm leading-relaxed text-zinc-300">
         <h2 className="text-base font-semibold text-zinc-100">Вкладки</h2>
         <ul className="list-disc space-y-2 pl-5 text-zinc-400">

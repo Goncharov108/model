@@ -1,0 +1,12 @@
+# Hermes (Telegram) ↔ Cursor — синхронизация
+
+Когда владелец говорит о работе с **Hermes в TG**, «что сделали на сервере», «сверься с Hermes», «подтяни с VPS»:
+
+1. Запусти **`scripts/sync/pull-hermes-from-vps.sh`** (Shell) и прочитай вывод + `docs/sync/hermes-vps-snapshot.txt`.
+2. Прочитай **`docs/sync/HERMES_HANDOFF.md`** (журнал передачи).
+3. Кратко доложи: ветка, коммиты, незакоммиченное, что нужно слить/не трогать.
+4. Не делай `git merge` / push без явной просьбы владельца.
+
+**Клон Hermes на VPS:** `/home/hermes/vault/Projects/model` — та же репа, но история может расходиться с Mac.
+
+**Правило владельца:** пока комп выключен — можно работать с Hermes в TG; в Cursor — подхватывать через handoff + скрипт.

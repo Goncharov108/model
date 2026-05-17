@@ -13,3 +13,6 @@ web/.env.*
 
 # Утилиты извлечения PDF (локально, не в Git)
 .venv-pdf/
+
+# Снимок git Hermes на VPS (генерируется scripts/sync/pull-hermes-from-vps.sh)
+docs/sync/hermes-vps-snapshot.txt

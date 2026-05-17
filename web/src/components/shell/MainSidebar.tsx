@@ -4,7 +4,8 @@ import { sidebarNavClass } from '../../ui/sidebarNav'
 import { AccountProfileBlock } from './AccountProfileBlock'
 
 /** Главное боковое меню приложения. */
-export function MainSidebar() {
+export function MainSidebar(props: { onNavigate?: () => void }) {
+  const { onNavigate } = props
   const { pathname } = useLocation()
 
   return (
@@ -20,6 +21,7 @@ export function MainSidebar() {
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3" aria-label="Разделы">
         <NavLink
           to={PATH.account}
+          onClick={onNavigate}
           className={({ isActive }) => sidebarNavClass(isActive)}
         >
           Настройки аккаунта
@@ -28,6 +30,7 @@ export function MainSidebar() {
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={onNavigate}
             end={item.end}
             className={({ isActive }) => sidebarNavClass(isActive)}
           >
@@ -40,13 +43,18 @@ export function MainSidebar() {
         <AccountProfileBlock />
         <NavLink
           to={PATH.masterAdmin.overview}
+          onClick={onNavigate}
           className={({ isActive }) =>
             sidebarNavClass(isActive || pathname.startsWith(PATH.masterAdmin.root))
           }
         >
           Мастер-админ
         </NavLink>
-        <NavLink to={PATH.admin} className={({ isActive }) => sidebarNavClass(isActive)}>
+        <NavLink
+          to={PATH.admin}
+          onClick={onNavigate}
+          className={({ isActive }) => sidebarNavClass(isActive)}
+        >
           Админ-панель
         </NavLink>
       </div>

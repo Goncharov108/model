@@ -8,7 +8,6 @@ import { downloadJson } from '../lib/downloadJson'
 import { usePlanningAnswersStore } from '../store/planningAnswersStore'
 import { AppButton } from '../ui/AppButton'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
-import { PageHeader } from '../ui/PageHeader'
 
 /** Перманентный опросник плана: ответы сохраняются в localStorage. */
 export function PlanningQuestionnaireWorkspace(): JSX.Element {
@@ -61,12 +60,7 @@ export function PlanningQuestionnaireWorkspace(): JSX.Element {
           setImportError(null)
         }}
       />
-      <PageHeader
-        eyebrow="План реализации"
-        title="Вопросы с вариантами"
-        description="Ответы хранятся только в этом браузере. Чтобы передать их ассистенту в чат — нажми «Экспорт JSON» и вставь файл или содержимое сюда. Импорт восстанавливает ответы из JSON."
-      />
-      <section className="-mt-4 space-y-3 border-b border-zinc-800 pb-8">
+      <section className="space-y-3 border-b border-zinc-800 pb-8">
         <div className="flex flex-wrap gap-2">
           <AppButton type="button" onClick={onExport}>
             Экспорт JSON

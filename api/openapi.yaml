@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: model API (placeholder)
-  version: "0"
+  title: model API (v1 draft)
+  version: "0.2.0"
 paths:
   /health:
     get:
@@ -13,7 +13,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [ok, service]
+                required: [ok, service, version]
                 properties:
                   ok:
                     type: boolean
@@ -21,3 +21,43 @@ paths:
                     type: string
                   version:
                     type: string
+
+  /api/v1/text/inspect:
+    post:
+      summary: Базовый анализ текста (длина, слова, превью)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+      responses:
+        "200":
+          description: Анализ выполнен
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, data]
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+                    required: [textLength, wordCount, preview]
+                    properties:
+                      textLength:
+                        type: integer
+                      wordCount:
+                        type: integer
+                      preview:
+                        type: string
+        "400":
+          description: Ошибка валидации или JSON
+        "413":
+          description: Слишком большой payload
