@@ -82,6 +82,7 @@ export function MasterAdminIncomingWorkspace() {
   const [importMode, setImportMode] = useState<'replace' | 'merge'>('merge')
   const [importPreview, setImportPreview] = useState<{ originalName: string; finalName: string; willRename: boolean }[]>([])
   const [importSummary, setImportSummary] = useState<string | null>(null)
+  const [importConflicts, setImportConflicts] = useState<{ originalName: string; finalName: string }[]>([])
   const [pendingImportPayload, setPendingImportPayload] = useState<string | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importDialogDescription, setImportDialogDescription] = useState('')
@@ -352,14 +353,11 @@ export function MasterAdminIncomingWorkspace() {
                       setImportPreview(preview.items)
 
                       const renamed = preview.items.filter((x) => x.willRename)
-                      const renamedExamples = renamed.slice(0, 5).map((x) => `• ${x.originalName} → ${x.finalName}`)
+                      setImportConflicts(renamed.map((x) => ({ originalName: x.originalName, finalName: x.finalName })))
                       const descriptionLines = [
                         `Будет добавлено: ${preview.items.length}`,
                         `Переименовано из-за дублей: ${renamed.length}`,
                         `Пропущено невалидных: ${preview.skipped}`,
-                        '',
-                        renamedExamples.length > 0 ? 'Примеры переименований:' : 'Переименований нет.',
-                        ...renamedExamples,
                       ]
                       setImportDialogDescription(descriptionLines.join('\n'))
                       setPendingImportPayload(text)
@@ -383,6 +381,7 @@ export function MasterAdminIncomingWorkspace() {
                   }
                   setImportSummary('Последний импорт отменён')
                   setImportPreview([])
+                  setImportConflicts([])
                 }}
               >
                 Отменить последний импорт
@@ -542,12 +541,27 @@ export function MasterAdminIncomingWorkspace() {
       <ConfirmDialog
         open={importDialogOpen}
         title="Подтвердите импорт пресетов"
-        description={importDialogDescription}
+        description={<span className="whitespace-pre-line">{importDialogDescription}</span>}
+        details={
+          importConflicts.length > 0 ? (
+            <div className="rounded-lg border border-zinc-700 bg-zinc-950/70 p-3">
+              <p className="mb-2 text-xs font-medium text-zinc-300">Полный список конфликтов имён:</p>
+              <ul className="max-h-56 space-y-1 overflow-auto pr-1 text-xs text-zinc-400">
+                {importConflicts.map((item, index) => (
+                  <li key={`${item.originalName}-${item.finalName}-${index}`} className="break-words">
+                    {item.originalName} → {item.finalName}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null
+        }
         confirmLabel="Импортировать"
         cancelLabel="Отмена"
         onCancel={() => {
           setImportDialogOpen(false)
           setPendingImportPayload(null)
+          setImportConflicts([])
         }}
         onConfirm={() => {
           if (!pendingImportPayload) return

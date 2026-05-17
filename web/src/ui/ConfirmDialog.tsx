@@ -1,4 +1,4 @@
-import type { JSX } from 'react'
+import type { JSX, ReactNode } from 'react'
 import { useEffect, useId, useRef } from 'react'
 import { AppButton } from './AppButton'
 
@@ -8,7 +8,8 @@ type ConfirmVariant = 'danger' | 'primary'
 export function ConfirmDialog(props: {
   open: boolean
   title: string
-  description: string
+  description: ReactNode
+  details?: ReactNode
   confirmLabel: string
   cancelLabel?: string
   confirmVariant?: ConfirmVariant
@@ -19,6 +20,7 @@ export function ConfirmDialog(props: {
     open,
     title,
     description,
+    details,
     confirmLabel,
     cancelLabel = 'Отмена',
     confirmVariant = 'primary',
@@ -54,9 +56,10 @@ export function ConfirmDialog(props: {
       <h2 id={titleId} className="text-lg font-semibold text-zinc-50">
         {title}
       </h2>
-      <p id={descId} className="mt-2 text-sm leading-relaxed text-zinc-400">
+      <div id={descId} className="mt-2 text-sm leading-relaxed text-zinc-400">
         {description}
-      </p>
+      </div>
+      {details ? <div className="mt-3">{details}</div> : null}
       <div className="mt-6 flex flex-wrap justify-end gap-2">
         <AppButton type="button" variant="ghost" onClick={onCancel}>
           {cancelLabel}
