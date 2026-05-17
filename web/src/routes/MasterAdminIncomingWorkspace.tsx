@@ -47,7 +47,14 @@ const FOLDER_LABEL: Record<TelegramNoteFolder, string> = {
 export function MasterAdminIncomingWorkspace() {
   const snapshot = useTelegramNotesStore((s) => s.snapshot)
   const setSnapshot = useTelegramNotesStore((s) => s.setSnapshot)
+  const selectedIds = useTelegramNotesStore((s) => s.selectedIds)
   const setItemState = useTelegramNotesStore((s) => s.setItemState)
+  const setItemFolder = useTelegramNotesStore((s) => s.setItemFolder)
+  const applyStateToSelected = useTelegramNotesStore((s) => s.applyStateToSelected)
+  const applyFolderToSelected = useTelegramNotesStore((s) => s.applyFolderToSelected)
+  const toggleSelected = useTelegramNotesStore((s) => s.toggleSelected)
+  const clearSelection = useTelegramNotesStore((s) => s.clearSelection)
+  const selectAll = useTelegramNotesStore((s) => s.selectAll)
   const applyAutoRouting = useTelegramNotesStore((s) => s.applyAutoRouting)
   const clear = useTelegramNotesStore((s) => s.clear)
 
@@ -92,6 +99,10 @@ export function MasterAdminIncomingWorkspace() {
     })
   }, [folderFilter, groupFilter, query, snapshot, stateFilter])
 
+  const selectedCount = selectedIds.length
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
+  const allFilteredSelected = filteredItems.length > 0 && filteredItems.every((item) => selectedSet.has(item.id))
+
   async function handleImport(file: File) {
     setBusy(true)
     setError(null)
@@ -115,7 +126,7 @@ export function MasterAdminIncomingWorkspace() {
       <PageHeader
         eyebrow="Мастер-админ"
         title="Входящий поток · ТГ заметки"
-        description="Этап 3: авто-папки (Идеи/Работа/Финансы/Медиа/Разное) и массовая сортировка."
+        description="Этап 4: ручное переопределение папки + массовые операции по выбранным заметкам."
       />
 
       <SurfaceCard title="Импорт из Telegram">
@@ -219,6 +230,41 @@ export function MasterAdminIncomingWorkspace() {
         </div>
       </SurfaceCard>
 
+      <SurfaceCard title="Массовые операции" description="Работает по выбранным заметкам в текущем списке.">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <AppButton
+            type="button"
+            variant="ghost"
+            onClick={() => (allFilteredSelected ? clearSelection() : selectAll(filteredItems.map((x) => x.id)))}
+            disabled={!snapshot || filteredItems.length === 0}
+          >
+            {allFilteredSelected ? 'Снять выбор' : 'Выбрать всё в фильтре'}
+          </AppButton>
+          <span className="text-xs text-zinc-500">Выбрано: {selectedCount}</span>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <AppButton type="button" variant="ghost" onClick={() => applyStateToSelected('in_work')} disabled={selectedCount === 0}>
+            Выбранные → В работу
+          </AppButton>
+          <AppButton type="button" variant="ghost" onClick={() => applyStateToSelected('archived')} disabled={selectedCount === 0}>
+            Выбранные → В архив
+          </AppButton>
+          <AppButton type="button" variant="ghost" onClick={() => applyStateToSelected('inbox')} disabled={selectedCount === 0}>
+            Выбранные → Во входящие
+          </AppButton>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-zinc-500">Переместить выбранные в папку:</span>
+          {(Object.keys(FOLDER_LABEL) as TelegramNoteFolder[]).map((folder) => (
+            <AppButton key={folder} type="button" variant="ghost" onClick={() => applyFolderToSelected(folder)} disabled={selectedCount === 0}>
+              {FOLDER_LABEL[folder]}
+            </AppButton>
+          ))}
+        </div>
+      </SurfaceCard>
+
       <SurfaceCard title="Лента заметок" description="Быстрые действия: в работу / в архив / вернуть во входящие.">
         {!snapshot ? (
           <p className="mt-4 text-sm text-zinc-500">Пока пусто. Загрузите JSON-экспорт из Telegram.</p>
@@ -227,8 +273,12 @@ export function MasterAdminIncomingWorkspace() {
         ) : (
           <div className="mt-4 space-y-3">
             {filteredItems.map((item) => (
-              <article key={item.id} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
+              <article key={item.id} className={`rounded-xl border p-3 ${selectedSet.has(item.id) ? 'border-violet-500/60 bg-violet-950/20' : 'border-zinc-800 bg-zinc-900/50'}`}>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                  <label className="inline-flex items-center gap-2 rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">
+                    <input type="checkbox" checked={selectedSet.has(item.id)} onChange={() => toggleSelected(item.id)} />
+                    Выбрать
+                  </label>
                   <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{GROUP_LABEL[item.group]}</span>
                   <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{FOLDER_LABEL[item.folder]}</span>
                   <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{PRIORITY_LABEL[item.priority]}</span>
@@ -240,10 +290,18 @@ export function MasterAdminIncomingWorkspace() {
                 {item.links.length > 0 ? (
                   <ul className="mt-2 space-y-1 text-xs text-violet-300">{item.links.map((link) => <li key={`${item.id}-${link}`}><a href={link} target="_blank" rel="noreferrer" className="hover:underline">{link}</a></li>)}</ul>
                 ) : null}
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   <AppButton type="button" variant="ghost" onClick={() => setItemState(item.id, 'in_work')}>В работу</AppButton>
                   <AppButton type="button" variant="ghost" onClick={() => setItemState(item.id, 'archived')}>В архив</AppButton>
                   <AppButton type="button" variant="ghost" onClick={() => setItemState(item.id, 'inbox')}>Во входящие</AppButton>
+                  <label className="ml-auto flex items-center gap-2 text-xs text-zinc-400">
+                    Папка:
+                    <select className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs text-zinc-100" value={item.folder} onChange={(e) => setItemFolder(item.id, e.target.value as TelegramNoteFolder)}>
+                      {(Object.keys(FOLDER_LABEL) as TelegramNoteFolder[]).map((folder) => (
+                        <option key={folder} value={folder}>{FOLDER_LABEL[folder]}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
               </article>
             ))}
