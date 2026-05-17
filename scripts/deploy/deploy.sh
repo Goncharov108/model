@@ -12,7 +12,8 @@ DEPLOY_USER="${DEPLOY_USER:-root}"
 SSH_PORT="${SSH_PORT:-22}"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_ed25519}"
 SSH_OPTS=(-p "$SSH_PORT" -o BatchMode=yes)
-[[ -f "$SSH_KEY" ]] && SSH_OPTS+=(-i "$SSH_KEY")
+SCP_OPTS=(-P "$SSH_PORT" -o BatchMode=yes)
+[[ -f "$SSH_KEY" ]] && SSH_OPTS+=(-i "$SSH_KEY") && SCP_OPTS+=(-i "$SSH_KEY")
 
 SSH_TARGET="${DEPLOY_USER}@${DEPLOY_HOST}"
 RSYNC_SSH="ssh ${SSH_OPTS[*]}"
@@ -57,9 +58,9 @@ if [[ "$SKIP_API" != "1" ]]; then
     -e "$RSYNC_SSH" \
     "$API_DIR/" "$SSH_TARGET:$API_REMOTE_DIR/"
 
-  echo "[5/6] npm ci (prod) + restart $API_SERVICE_NAME"
+  echo "[5/6] npm install (prod) + restart $API_SERVICE_NAME"
   ssh "${SSH_OPTS[@]}" "$SSH_TARGET" \
-    "cd '$API_REMOTE_DIR' && npm ci --omit=dev && systemctl restart '$API_SERVICE_NAME' && systemctl is-active '$API_SERVICE_NAME'"
+    "cd '$API_REMOTE_DIR' && if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi && systemctl restart '$API_SERVICE_NAME' && systemctl is-active '$API_SERVICE_NAME'"
 else
   echo "[4/6] api — пропуск"
   echo "[5/6] api — пропуск"
@@ -68,7 +69,7 @@ fi
 echo "[6/6] Права deploy + nginx..."
 NGINX_CMD="chown -R deploy:deploy /var/www/model /opt/model/api 2>/dev/null || true"
 if [[ "$DEPLOY_NGINX" == "1" && -f "$NGINX_CONF" ]]; then
-  scp "${SSH_OPTS[@]}" "$NGINX_CONF" "$SSH_TARGET:/etc/nginx/sites-available/model"
+  scp "${SCP_OPTS[@]}" "$NGINX_CONF" "$SSH_TARGET:/etc/nginx/sites-available/model"
   NGINX_CMD="$NGINX_CMD && nginx -t && systemctl reload nginx"
 fi
 ssh "${SSH_OPTS[@]}" "$SSH_TARGET" "$NGINX_CMD"
