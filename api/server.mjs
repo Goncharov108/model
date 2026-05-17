@@ -50,7 +50,8 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
-  if (req.method === 'POST' && req.url === '/api/v1/text/inspect') {
+  // nginx: location /api/ → proxy_pass :3847/ — префикс /api снимается
+  if (req.method === 'POST' && req.url === '/v1/text/inspect') {
     try {
       const body = await readJsonBody(req)
       const text = body?.text

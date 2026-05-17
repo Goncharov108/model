@@ -31,7 +31,7 @@ async function fetchHealth(port) {
 }
 
 async function fetchInspect(port) {
-  const response = await fetch(`http://127.0.0.1:${port}/api/v1/text/inspect`, {
+  const response = await fetch(`http://127.0.0.1:${port}/v1/text/inspect`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: 'Привет мир из smoke теста' }),
