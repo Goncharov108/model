@@ -60,7 +60,9 @@ export function MasterAdminIncomingWorkspace() {
   const applyQuickMode = useTelegramNotesStore((s) => s.applyQuickMode)
   const resetPresetsToDefault = useTelegramNotesStore((s) => s.resetPresetsToDefault)
   const exportPresets = useTelegramNotesStore((s) => s.exportPresets)
+  const previewImportPresets = useTelegramNotesStore((s) => s.previewImportPresets)
   const importPresets = useTelegramNotesStore((s) => s.importPresets)
+  const undoLastImport = useTelegramNotesStore((s) => s.undoLastImport)
   const setItemState = useTelegramNotesStore((s) => s.setItemState)
   const setItemFolder = useTelegramNotesStore((s) => s.setItemFolder)
   const applyStateToSelected = useTelegramNotesStore((s) => s.applyStateToSelected)
@@ -77,6 +79,8 @@ export function MasterAdminIncomingWorkspace() {
   const [query, setQuery] = useState('')
   const [presetName, setPresetName] = useState('')
   const [importMode, setImportMode] = useState<'replace' | 'merge'>('merge')
+  const [importPreview, setImportPreview] = useState<{ originalName: string; finalName: string; willRename: boolean }[]>([])
+  const [importSummary, setImportSummary] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -321,8 +325,8 @@ export function MasterAdminIncomingWorkspace() {
                   value={importMode}
                   onChange={(e) => setImportMode(e.target.value as 'replace' | 'merge')}
                 >
-                  <option value="merge">Merge (добавить к текущим)</option>
-                  <option value="replace">Replace (заменить пользовательские)</option>
+                  <option value="merge">Добавить к текущим</option>
+                  <option value="replace">Заменить пользовательские</option>
                 </select>
               </label>
               <label className="inline-flex cursor-pointer items-center rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2 text-xs text-zinc-200 hover:border-violet-500/50">
@@ -334,15 +338,58 @@ export function MasterAdminIncomingWorkspace() {
                   onChange={async (e) => {
                     const file = e.target.files?.[0]
                     if (!file) return
-                    const text = await readTextFile(file)
-                    const result = importPresets(text, importMode)
-                    if (!result.ok) {
-                      window.alert(result.error ?? 'Не удалось импортировать пресеты')
+                    try {
+                      const text = await readTextFile(file)
+                      const preview = previewImportPresets(text, importMode)
+                      if (!preview.ok) {
+                        window.alert(preview.error ?? 'Не удалось прочитать пресеты')
+                        return
+                      }
+                      setImportPreview(preview.items)
+
+                      const confirmText = [
+                        `Будет добавлено: ${preview.items.length}`,
+                        `Переименовано из-за дублей: ${preview.items.filter((x) => x.willRename).length}`,
+                        `Пропущено невалидных: ${preview.skipped}`,
+                        '',
+                        'Продолжить импорт?',
+                      ].join('\n')
+
+                      const ok = window.confirm(confirmText)
+                      if (!ok) return
+
+                      const result = importPresets(text, importMode)
+                      if (!result.ok) {
+                        window.alert(result.error ?? 'Не удалось импортировать пресеты')
+                        return
+                      }
+
+                      setImportSummary(
+                        `Импорт выполнен: добавлено ${result.added}, переименовано ${result.renamed}, пропущено ${result.skipped}`,
+                      )
+                    } catch (err) {
+                      window.alert(err instanceof Error ? err.message : 'Ошибка чтения файла')
+                    } finally {
+                      e.currentTarget.value = ''
                     }
-                    e.currentTarget.value = ''
                   }}
                 />
               </label>
+              <AppButton
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  const result = undoLastImport()
+                  if (!result.ok) {
+                    window.alert(result.error ?? 'Откат недоступен')
+                    return
+                  }
+                  setImportSummary('Последний импорт отменён')
+                  setImportPreview([])
+                }}
+              >
+                Отменить последний импорт
+              </AppButton>
               <AppButton
                 type="button"
                 variant="ghost"
@@ -354,6 +401,22 @@ export function MasterAdminIncomingWorkspace() {
                 Сброс к базовым
               </AppButton>
             </div>
+
+            {importSummary ? <p className="text-xs text-emerald-300">{importSummary}</p> : null}
+            {importPreview.length > 0 ? (
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300">
+                <p className="mb-2 text-zinc-400">Предпросмотр импорта (последний выбранный файл):</p>
+                <ul className="space-y-1">
+                  {importPreview.slice(0, 8).map((item, index) => (
+                    <li key={`${item.originalName}-${index}`}>
+                      {item.originalName}
+                      {item.willRename ? ` → ${item.finalName}` : ''}
+                    </li>
+                  ))}
+                </ul>
+                {importPreview.length > 8 ? <p className="mt-2 text-zinc-500">И ещё: {importPreview.length - 8}</p> : null}
+              </div>
+            ) : null}
 
             <div className="grid gap-3 lg:grid-cols-3">
               {(Object.keys(PRIORITY_LABEL) as TelegramNotePriority[]).map((priority) => (

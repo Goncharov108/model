@@ -39,6 +39,21 @@ interface TelegramPresetsExport {
 
 type PresetImportMode = 'replace' | 'merge'
 
+type PresetImportPreviewItem = {
+  originalName: string
+  finalName: string
+  willRename: boolean
+}
+
+type PresetImportResult = {
+  ok: boolean
+  error?: string
+  added: number
+  renamed: number
+  skipped: number
+  mode: PresetImportMode
+}
+
 interface TelegramNotesStoreState {
   snapshot: TelegramNotesSnapshot | null
   selectedIds: string[]
@@ -61,7 +76,9 @@ interface TelegramNotesStoreState {
   applyQuickMode: (mode: QuickMode) => void
   resetPresetsToDefault: () => void
   exportPresets: () => TelegramPresetsExport
-  importPresets: (payload: string, mode?: PresetImportMode) => { ok: boolean; error?: string }
+  previewImportPresets: (payload: string, mode?: PresetImportMode) => { ok: boolean; error?: string; items: PresetImportPreviewItem[]; skipped: number; mode: PresetImportMode }
+  importPresets: (payload: string, mode?: PresetImportMode) => PresetImportResult
+  undoLastImport: () => { ok: boolean; error?: string }
   applyAutoRouting: () => void
   clear: () => void
 }
@@ -112,39 +129,81 @@ function isValidState(value: unknown): value is TelegramNoteState {
   return value === 'inbox' || value === 'in_work' || value === 'archived'
 }
 
-function normalizeImportedPresets(raw: unknown): TelegramRoutingRuleSet[] {
-  if (!raw || typeof raw !== 'object') return []
+function parseImportedPresets(raw: unknown): { valid: TelegramRoutingRuleSet[]; skipped: number } {
+  if (!raw || typeof raw !== 'object') return { valid: [], skipped: 0 }
   const presets = (raw as { presets?: unknown[] }).presets
-  if (!Array.isArray(presets)) return []
+  if (!Array.isArray(presets)) return { valid: [], skipped: 0 }
 
-  return presets
-    .map((preset) => {
-      if (!preset || typeof preset !== 'object') return null
-      const p = preset as Partial<TelegramRoutingRuleSet>
-      if (!p.name || typeof p.name !== 'string') return null
-      if (!p.priorityToState || !p.folderToState || !p.defaultState) return null
-      if (!isValidState(p.defaultState)) return null
-      return {
-        id: newId(),
-        name: sanitizeName(p.name),
-        locked: false,
-        priorityToState: {
-          high: isValidState((p.priorityToState as Record<string, unknown>)?.high) ? (p.priorityToState as Record<string, TelegramNoteState>).high : 'inbox',
-          normal: isValidState((p.priorityToState as Record<string, unknown>)?.normal) ? (p.priorityToState as Record<string, TelegramNoteState>).normal : 'inbox',
-          low: isValidState((p.priorityToState as Record<string, unknown>)?.low) ? (p.priorityToState as Record<string, TelegramNoteState>).low : 'inbox',
-        },
-        folderToState: {
-          ideas: isValidState((p.folderToState as Record<string, unknown>)?.ideas) ? (p.folderToState as Record<string, TelegramNoteState>).ideas : undefined,
-          work: isValidState((p.folderToState as Record<string, unknown>)?.work) ? (p.folderToState as Record<string, TelegramNoteState>).work : undefined,
-          finance: isValidState((p.folderToState as Record<string, unknown>)?.finance) ? (p.folderToState as Record<string, TelegramNoteState>).finance : undefined,
-          media: isValidState((p.folderToState as Record<string, unknown>)?.media) ? (p.folderToState as Record<string, TelegramNoteState>).media : undefined,
-          misc: isValidState((p.folderToState as Record<string, unknown>)?.misc) ? (p.folderToState as Record<string, TelegramNoteState>).misc : undefined,
-        },
-        defaultState: p.defaultState,
-      }
+  const valid: TelegramRoutingRuleSet[] = []
+  let skipped = 0
+
+  for (const preset of presets) {
+    if (!preset || typeof preset !== 'object') {
+      skipped += 1
+      continue
+    }
+    const p = preset as Partial<TelegramRoutingRuleSet>
+    if (!p.name || typeof p.name !== 'string') {
+      skipped += 1
+      continue
+    }
+    if (!p.priorityToState || !p.folderToState || !p.defaultState || !isValidState(p.defaultState)) {
+      skipped += 1
+      continue
+    }
+
+    valid.push({
+      id: newId(),
+      name: sanitizeName(p.name),
+      locked: false,
+      priorityToState: {
+        high: isValidState((p.priorityToState as Record<string, unknown>)?.high)
+          ? (p.priorityToState as Record<string, TelegramNoteState>).high
+          : 'inbox',
+        normal: isValidState((p.priorityToState as Record<string, unknown>)?.normal)
+          ? (p.priorityToState as Record<string, TelegramNoteState>).normal
+          : 'inbox',
+        low: isValidState((p.priorityToState as Record<string, unknown>)?.low)
+          ? (p.priorityToState as Record<string, TelegramNoteState>).low
+          : 'inbox',
+      },
+      folderToState: {
+        ideas: isValidState((p.folderToState as Record<string, unknown>)?.ideas)
+          ? (p.folderToState as Record<string, TelegramNoteState>).ideas
+          : undefined,
+        work: isValidState((p.folderToState as Record<string, unknown>)?.work)
+          ? (p.folderToState as Record<string, TelegramNoteState>).work
+          : undefined,
+        finance: isValidState((p.folderToState as Record<string, unknown>)?.finance)
+          ? (p.folderToState as Record<string, TelegramNoteState>).finance
+          : undefined,
+        media: isValidState((p.folderToState as Record<string, unknown>)?.media)
+          ? (p.folderToState as Record<string, TelegramNoteState>).media
+          : undefined,
+        misc: isValidState((p.folderToState as Record<string, unknown>)?.misc)
+          ? (p.folderToState as Record<string, TelegramNoteState>).misc
+          : undefined,
+      },
+      defaultState: p.defaultState,
     })
-    .filter((x): x is TelegramRoutingRuleSet => Boolean(x))
+  }
+
+  return { valid, skipped }
 }
+
+function buildImportPreview(imported: TelegramRoutingRuleSet[], baseNames: Set<string>): PresetImportPreviewItem[] {
+  const names = new Set(baseNames)
+  return imported.map((preset) => {
+    const finalName = uniqueName(preset.name, names)
+    return {
+      originalName: sanitizeName(preset.name),
+      finalName,
+      willRename: normName(finalName) !== normName(preset.name),
+    }
+  })
+}
+
+let lastImportBackup: { routingPresets: TelegramRoutingRuleSet[]; activePresetId: string } | null = null
 
 export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
   persist(
@@ -272,36 +331,73 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
           presets: state.routingPresets.filter((p) => !p.locked),
         }
       },
+      previewImportPresets: (payload: string, mode: PresetImportMode = 'replace') => {
+        try {
+          const parsed = JSON.parse(payload)
+          const parsedPresets = parseImportedPresets(parsed)
+          if (parsedPresets.valid.length === 0) {
+            return { ok: false, error: 'Не найдено валидных пресетов в файле', items: [], skipped: parsedPresets.skipped, mode }
+          }
+
+          const store = useTelegramNotesStore.getState()
+          const base = DEFAULT_PRESETS
+          const existingCustom = store.routingPresets.filter((p) => !p.locked)
+          const baseNames = new Set((mode === 'merge' ? [...base, ...existingCustom] : base).map((p) => normName(p.name)))
+          const items = buildImportPreview(parsedPresets.valid, baseNames)
+          return { ok: true, items, skipped: parsedPresets.skipped, mode }
+        } catch {
+          return { ok: false, error: 'Некорректный JSON-файл', items: [], skipped: 0, mode }
+        }
+      },
       importPresets: (payload: string, mode: PresetImportMode = 'replace') => {
         try {
           const parsed = JSON.parse(payload)
-          const imported = normalizeImportedPresets(parsed)
-          if (imported.length === 0) return { ok: false, error: 'Не найдено валидных пресетов в файле' }
+          const parsedPresets = parseImportedPresets(parsed)
+          if (parsedPresets.valid.length === 0) {
+            return { ok: false, error: 'Не найдено валидных пресетов в файле', added: 0, renamed: 0, skipped: parsedPresets.skipped, mode }
+          }
 
-          set((store) => {
-            const base = DEFAULT_PRESETS
-            const existingCustom = store.routingPresets.filter((p) => !p.locked)
-            const existingNames = new Set(
-              (mode === 'merge' ? [...base, ...existingCustom] : base).map((p) => normName(p.name)),
-            )
+          const storeBefore = useTelegramNotesStore.getState()
+          const base = DEFAULT_PRESETS
+          const existingCustom = storeBefore.routingPresets.filter((p) => !p.locked)
+          const baseNames = new Set((mode === 'merge' ? [...base, ...existingCustom] : base).map((p) => normName(p.name)))
+          const preview = buildImportPreview(parsedPresets.valid, baseNames)
+          const renamed = preview.filter((x) => x.willRename).length
 
-            const normalizedImported = imported.map((p) => ({
+          const normalizedImported = parsedPresets.valid.map((p, idx) => ({
+            ...p,
+            id: newId(),
+            name: preview[idx]?.finalName ?? sanitizeName(p.name),
+            locked: false,
+          }))
+
+          lastImportBackup = {
+            routingPresets: storeBefore.routingPresets.map((p) => ({
               ...p,
-              id: newId(),
-              name: uniqueName(p.name, existingNames),
-              locked: false,
-            }))
+              priorityToState: { ...p.priorityToState },
+              folderToState: { ...p.folderToState },
+            })),
+            activePresetId: storeBefore.activePresetId,
+          }
 
+          set(() => {
             const custom = mode === 'merge' ? [...existingCustom, ...normalizedImported] : normalizedImported
             return {
               routingPresets: [...base, ...custom],
-              activePresetId: normalizedImported[0]?.id ?? store.activePresetId,
+              activePresetId: normalizedImported[0]?.id ?? storeBefore.activePresetId,
             }
           })
-          return { ok: true }
+
+          return { ok: true, added: normalizedImported.length, renamed, skipped: parsedPresets.skipped, mode }
         } catch {
-          return { ok: false, error: 'Некорректный JSON-файл' }
+          return { ok: false, error: 'Некорректный JSON-файл', added: 0, renamed: 0, skipped: 0, mode }
         }
+      },
+      undoLastImport: () => {
+        if (!lastImportBackup) return { ok: false, error: 'Нет последнего импорта для отката' }
+        set({ routingPresets: lastImportBackup.routingPresets, activePresetId: lastImportBackup.activePresetId })
+        lastImportBackup = null
+        return { ok: true }
       },
       applyAutoRouting: () =>
         set((store) => {

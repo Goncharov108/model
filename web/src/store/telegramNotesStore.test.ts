@@ -151,8 +151,13 @@ describe('telegramNotesStore', () => {
       ],
     })
 
+    const preview = store.previewImportPresets(payload, 'merge')
+    expect(preview.ok).toBe(true)
+    expect(preview.items.some((x) => x.willRename)).toBe(true)
+
     const imported = store.importPresets(payload, 'merge')
     expect(imported.ok).toBe(true)
+    expect(imported.renamed).toBe(1)
 
     const names = useTelegramNotesStore
       .getState()
@@ -161,6 +166,58 @@ describe('telegramNotesStore', () => {
 
     expect(names).toContain('Мой пресет')
     expect(names.some((x) => x.startsWith('Мой пресет ('))).toBe(true)
+  })
+
+  it('мягко пропускает невалидные пресеты и импортирует валидные', () => {
+    const store = useTelegramNotesStore.getState()
+
+    const payload = JSON.stringify({
+      version: 1,
+      presets: [
+        {
+          id: 'ok-1',
+          name: 'Валидный',
+          priorityToState: { high: 'in_work', normal: 'inbox', low: 'inbox' },
+          folderToState: { work: 'in_work' },
+          defaultState: 'inbox',
+        },
+        { id: 'bad-1', name: 'Битый' },
+      ],
+    })
+
+    const imported = store.importPresets(payload, 'replace')
+    expect(imported.ok).toBe(true)
+    expect(imported.added).toBe(1)
+    expect(imported.skipped).toBe(1)
+    expect(useTelegramNotesStore.getState().routingPresets.some((x) => x.name === 'Валидный')).toBe(true)
+  })
+
+  it('можно откатить последний импорт пресетов', () => {
+    const store = useTelegramNotesStore.getState()
+    store.createPreset('До импорта')
+    const beforeNames = useTelegramNotesStore.getState().routingPresets.filter((x) => !x.locked).map((x) => x.name)
+
+    const payload = JSON.stringify({
+      version: 1,
+      presets: [
+        {
+          id: 'undo-1',
+          name: 'После импорта',
+          priorityToState: { high: 'in_work', normal: 'inbox', low: 'inbox' },
+          folderToState: { work: 'in_work' },
+          defaultState: 'inbox',
+        },
+      ],
+    })
+
+    const imported = store.importPresets(payload, 'replace')
+    expect(imported.ok).toBe(true)
+
+    const undo = store.undoLastImport()
+    expect(undo.ok).toBe(true)
+
+    const afterNames = useTelegramNotesStore.getState().routingPresets.filter((x) => !x.locked).map((x) => x.name)
+    expect(afterNames).toEqual(beforeNames)
   })
 
   it('сбрасывает пресеты к базовым', () => {
