@@ -83,6 +83,7 @@ export function MasterAdminIncomingWorkspace() {
   const [importPreview, setImportPreview] = useState<{ originalName: string; finalName: string; willRename: boolean }[]>([])
   const [importSummary, setImportSummary] = useState<string | null>(null)
   const [importConflicts, setImportConflicts] = useState<{ originalName: string; finalName: string }[]>([])
+  const [importConflictQuery, setImportConflictQuery] = useState('')
   const [pendingImportPayload, setPendingImportPayload] = useState<string | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importDialogDescription, setImportDialogDescription] = useState('')
@@ -131,6 +132,11 @@ export function MasterAdminIncomingWorkspace() {
     [activePresetId, routingPresets],
   )
   const isActivePresetLocked = Boolean(activePreset?.locked)
+  const filteredImportConflicts = useMemo(() => {
+    const q = importConflictQuery.trim().toLowerCase()
+    if (!q) return importConflicts
+    return importConflicts.filter((item) => `${item.originalName} ${item.finalName}`.toLowerCase().includes(q))
+  }, [importConflictQuery, importConflicts])
 
   useEffect(() => {
     setPresetName(activePreset?.name ?? '')
@@ -361,6 +367,7 @@ export function MasterAdminIncomingWorkspace() {
                       ]
                       setImportDialogDescription(descriptionLines.join('\n'))
                       setPendingImportPayload(text)
+                      setImportConflictQuery('')
                       setImportDialogOpen(true)
                     } catch (err) {
                       window.alert(err instanceof Error ? err.message : 'Ошибка чтения файла')
@@ -382,6 +389,7 @@ export function MasterAdminIncomingWorkspace() {
                   setImportSummary('Последний импорт отменён')
                   setImportPreview([])
                   setImportConflicts([])
+                  setImportConflictQuery('')
                 }}
               >
                 Отменить последний импорт
@@ -546,13 +554,28 @@ export function MasterAdminIncomingWorkspace() {
           importConflicts.length > 0 ? (
             <div className="rounded-lg border border-zinc-700 bg-zinc-950/70 p-3">
               <p className="mb-2 text-xs font-medium text-zinc-300">Полный список конфликтов имён:</p>
+              <label className="mb-2 block text-xs text-zinc-400">
+                Поиск по конфликтам
+                <input
+                  className="mt-1 w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs text-zinc-100"
+                  value={importConflictQuery}
+                  onChange={(e) => setImportConflictQuery(e.target.value)}
+                  placeholder="Введите часть старого или нового имени…"
+                />
+              </label>
+              <p className="mb-2 text-[11px] text-zinc-500">
+                Показано: {filteredImportConflicts.length} из {importConflicts.length}
+              </p>
               <ul className="max-h-56 space-y-1 overflow-auto pr-1 text-xs text-zinc-400">
-                {importConflicts.map((item, index) => (
+                {filteredImportConflicts.map((item, index) => (
                   <li key={`${item.originalName}-${item.finalName}-${index}`} className="break-words">
                     {item.originalName} → {item.finalName}
                   </li>
                 ))}
               </ul>
+              {filteredImportConflicts.length === 0 ? (
+                <p className="mt-2 text-xs text-zinc-500">Ничего не найдено по текущему запросу.</p>
+              ) : null}
             </div>
           ) : null
         }
@@ -562,6 +585,7 @@ export function MasterAdminIncomingWorkspace() {
           setImportDialogOpen(false)
           setPendingImportPayload(null)
           setImportConflicts([])
+          setImportConflictQuery('')
         }}
         onConfirm={() => {
           if (!pendingImportPayload) return
