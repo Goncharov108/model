@@ -15,17 +15,10 @@
 Из корня репозитория:
 
 ```bash
-# только web + api (как в законе 15 для UI)
 ./scripts/deploy/deploy.sh
-
-# + обновить nginx (после правок scripts/deploy/nginx-model.conf)
 DEPLOY_NGINX=1 ./scripts/deploy/deploy.sh
-
-# только статика
 SKIP_API=1 ./scripts/deploy/deploy.sh
 ```
-
-Переменные:
 
 | Переменная | По умолчанию | Назначение |
 |------------|--------------|------------|

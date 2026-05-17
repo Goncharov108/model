@@ -38,7 +38,7 @@
 
 - **GitHub:** deploy key `hermes-vps-deploy`, ветка **`hermes/work`** на origin (push с VPS работает).
 - **Слияние:** API inspect, smoke, `scripts/deploy/deploy.sh` (вместо голого `deploy_v1.sh`), правка пути `/v1/text/inspect` под nginx.
-- **Нужно в Cursor:** закоммитить локальные правки + web/Hermes UI; при merge `hermes/work` → `main` — один скрипт деплоя.
+- **main:** слито с `hermes/work`, выкат через `deploy.sh`.
 
 ---
 
