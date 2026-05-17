@@ -47,6 +47,7 @@ describe('parseTelegramNotesExport', () => {
     expect(snapshot.dedupedCount).toBe(1)
     expect(snapshot.items[0]?.tags).toContain('github')
     expect(snapshot.items[0]?.priority).toBe('high')
+    expect(snapshot.items[0]?.folder).toBe('work')
     expect(snapshot.items[0]?.state).toBe('inbox')
   })
 })

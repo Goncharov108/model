@@ -1,5 +1,6 @@
 import { newId } from './newId'
 import type {
+  TelegramNoteFolder,
   TelegramNoteGroup,
   TelegramNoteItem,
   TelegramNotePriority,
@@ -102,6 +103,18 @@ function detectPriority(input: { text: string; links: string[]; tags: string[]; 
   return 'normal'
 }
 
+function detectFolder(input: { group: TelegramNoteGroup; tags: string[]; text: string; links: string[] }): TelegramNoteFolder {
+  if (input.tags.includes('finance')) return 'finance'
+  if (input.tags.includes('todo') || input.tags.includes('meeting') || input.tags.includes('github')) return 'work'
+  if (input.tags.includes('idea')) return 'ideas'
+  if (input.group === 'video' || input.group === 'photo') return 'media'
+
+  const fullText = `${input.text} ${input.links.join(' ')}`.toLowerCase()
+  if (['проект', 'задача', 'клиент', 'план'].some((token) => fullText.includes(token))) return 'work'
+  if (['идея', 'заметка', 'набросок'].some((token) => fullText.includes(token))) return 'ideas'
+  return 'misc'
+}
+
 function classifyGroup(input: {
   links: string[]
   text: string
@@ -163,6 +176,7 @@ export function parseTelegramNotesExport(raw: string, sourceName: string): Teleg
 
     const tags = detectTags({ text: plain, links, group })
     const priority = detectPriority({ text: plain, links, tags, group })
+    const folder = detectFolder({ group, tags, text: plain, links })
 
     items.push({
       id: String(message.id ?? newId()),
@@ -177,6 +191,7 @@ export function parseTelegramNotesExport(raw: string, sourceName: string): Teleg
       priority,
       state: 'inbox',
       dedupeKey,
+      folder,
     })
   }
 

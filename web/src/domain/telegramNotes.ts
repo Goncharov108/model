@@ -4,6 +4,8 @@ export type TelegramNotePriority = 'high' | 'normal' | 'low'
 
 export type TelegramNoteState = 'inbox' | 'in_work' | 'archived'
 
+export type TelegramNoteFolder = 'ideas' | 'work' | 'finance' | 'media' | 'misc'
+
 export interface TelegramNoteItem {
   id: string
   dateIso: string
@@ -17,6 +19,7 @@ export interface TelegramNoteItem {
   priority: TelegramNotePriority
   state: TelegramNoteState
   dedupeKey: string
+  folder: TelegramNoteFolder
 }
 
 export interface TelegramNotesSnapshot {

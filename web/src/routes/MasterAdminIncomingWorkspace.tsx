@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react'
-import type { TelegramNoteGroup, TelegramNotePriority, TelegramNoteState } from '../domain/telegramNotes'
+import type {
+  TelegramNoteFolder,
+  TelegramNoteGroup,
+  TelegramNotePriority,
+  TelegramNoteState,
+} from '../domain/telegramNotes'
 import { readTextFile } from '../lib/readTextFile'
 import { countByGroup, parseTelegramNotesExport } from '../lib/telegramNotes'
 import { useTelegramNotesStore } from '../store/telegramNotesStore'
@@ -31,15 +36,24 @@ const PRIORITY_LABEL: Record<TelegramNotePriority, string> = {
   low: 'Позже',
 }
 
-/** Входящий поток: импорт и разбор заметок из Telegram export JSON. */
+const FOLDER_LABEL: Record<TelegramNoteFolder, string> = {
+  ideas: 'Идеи',
+  work: 'Работа',
+  finance: 'Финансы',
+  media: 'Медиа',
+  misc: 'Разное',
+}
+
 export function MasterAdminIncomingWorkspace() {
   const snapshot = useTelegramNotesStore((s) => s.snapshot)
   const setSnapshot = useTelegramNotesStore((s) => s.setSnapshot)
   const setItemState = useTelegramNotesStore((s) => s.setItemState)
+  const applyAutoRouting = useTelegramNotesStore((s) => s.applyAutoRouting)
   const clear = useTelegramNotesStore((s) => s.clear)
 
   const [groupFilter, setGroupFilter] = useState<TelegramNoteGroup | 'all'>('all')
   const [stateFilter, setStateFilter] = useState<TelegramNoteState | 'all'>('all')
+  const [folderFilter, setFolderFilter] = useState<TelegramNoteFolder | 'all'>('all')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -55,16 +69,28 @@ export function MasterAdminIncomingWorkspace() {
     }
   }, [snapshot])
 
+  const folderCounters = useMemo(() => {
+    const items = snapshot?.items ?? []
+    return {
+      ideas: items.filter((x) => x.folder === 'ideas').length,
+      work: items.filter((x) => x.folder === 'work').length,
+      finance: items.filter((x) => x.folder === 'finance').length,
+      media: items.filter((x) => x.folder === 'media').length,
+      misc: items.filter((x) => x.folder === 'misc').length,
+    }
+  }, [snapshot])
+
   const filteredItems = useMemo(() => {
     const base = snapshot?.items ?? []
     return base.filter((item) => {
       if (groupFilter !== 'all' && item.group !== groupFilter) return false
       if (stateFilter !== 'all' && item.state !== stateFilter) return false
+      if (folderFilter !== 'all' && item.folder !== folderFilter) return false
       if (!query.trim()) return true
       const haystack = `${item.text} ${item.links.join(' ')} ${item.tags.join(' ')}`.toLowerCase()
       return haystack.includes(query.toLowerCase())
     })
-  }, [groupFilter, query, snapshot, stateFilter])
+  }, [folderFilter, groupFilter, query, snapshot, stateFilter])
 
   async function handleImport(file: File) {
     setBusy(true)
@@ -75,6 +101,7 @@ export function MasterAdminIncomingWorkspace() {
       setSnapshot(parsed)
       setGroupFilter('all')
       setStateFilter('all')
+      setFolderFilter('all')
       setQuery('')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось прочитать файл')
@@ -88,7 +115,7 @@ export function MasterAdminIncomingWorkspace() {
       <PageHeader
         eyebrow="Мастер-админ"
         title="Входящий поток · ТГ заметки"
-        description="Загрузите JSON-экспорт Telegram: заметки автоматически очищаются от дублей, получают теги и приоритет."
+        description="Этап 3: авто-папки (Идеи/Работа/Финансы/Медиа/Разное) и массовая сортировка."
       />
 
       <SurfaceCard title="Импорт из Telegram">
@@ -109,6 +136,9 @@ export function MasterAdminIncomingWorkspace() {
             />
           </label>
           <div className="flex gap-2">
+            <AppButton type="button" variant="ghost" onClick={() => applyAutoRouting()} disabled={!snapshot || busy}>
+              Массовая сортировка
+            </AppButton>
             <AppButton type="button" variant="ghost" onClick={() => clear()} disabled={!snapshot || busy}>
               Очистить
             </AppButton>
@@ -142,48 +172,49 @@ export function MasterAdminIncomingWorkspace() {
         <StatChip label={STATE_LABEL.archived} value={stateCounters.archived} />
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-5">
+        <StatChip label={FOLDER_LABEL.ideas} value={folderCounters.ideas} />
+        <StatChip label={FOLDER_LABEL.work} value={folderCounters.work} />
+        <StatChip label={FOLDER_LABEL.finance} value={folderCounters.finance} />
+        <StatChip label={FOLDER_LABEL.media} value={folderCounters.media} />
+        <StatChip label={FOLDER_LABEL.misc} value={folderCounters.misc} />
+      </div>
+
       <SurfaceCard title="Фильтр и поиск">
-        <div className="mt-4 grid gap-3 lg:grid-cols-3">
+        <div className="mt-4 grid gap-3 lg:grid-cols-4">
           <label className="flex flex-col gap-1 text-xs text-zinc-500">
             Группа
-            <select
-              className={inputClass}
-              value={groupFilter}
-              onChange={(e) => setGroupFilter(e.target.value as TelegramNoteGroup | 'all')}
-            >
+            <select className={inputClass} value={groupFilter} onChange={(e) => setGroupFilter(e.target.value as TelegramNoteGroup | 'all')}>
               <option value="all">Все</option>
               {(Object.keys(GROUP_LABEL) as TelegramNoteGroup[]).map((group) => (
-                <option key={group} value={group}>
-                  {GROUP_LABEL[group]}
-                </option>
+                <option key={group} value={group}>{GROUP_LABEL[group]}</option>
               ))}
             </select>
           </label>
 
           <label className="flex flex-col gap-1 text-xs text-zinc-500">
             Статус
-            <select
-              className={inputClass}
-              value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value as TelegramNoteState | 'all')}
-            >
+            <select className={inputClass} value={stateFilter} onChange={(e) => setStateFilter(e.target.value as TelegramNoteState | 'all')}>
               <option value="all">Все</option>
               {(Object.keys(STATE_LABEL) as TelegramNoteState[]).map((state) => (
-                <option key={state} value={state}>
-                  {STATE_LABEL[state]}
-                </option>
+                <option key={state} value={state}>{STATE_LABEL[state]}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            Папка
+            <select className={inputClass} value={folderFilter} onChange={(e) => setFolderFilter(e.target.value as TelegramNoteFolder | 'all')}>
+              <option value="all">Все</option>
+              {(Object.keys(FOLDER_LABEL) as TelegramNoteFolder[]).map((folder) => (
+                <option key={folder} value={folder}>{FOLDER_LABEL[folder]}</option>
               ))}
             </select>
           </label>
 
           <label className="min-w-0 flex-1 flex flex-col gap-1 text-xs text-zinc-500">
             Поиск
-            <input
-              className={inputClass}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Искать по тексту, ссылкам и тегам…"
-            />
+            <input className={inputClass} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Искать по тексту, ссылкам и тегам…" />
           </label>
         </div>
       </SurfaceCard>
@@ -199,52 +230,20 @@ export function MasterAdminIncomingWorkspace() {
               <article key={item.id} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                   <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{GROUP_LABEL[item.group]}</span>
+                  <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{FOLDER_LABEL[item.folder]}</span>
                   <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{PRIORITY_LABEL[item.priority]}</span>
                   <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-zinc-300">{STATE_LABEL[item.state]}</span>
                   <span>{new Date(item.dateIso).toLocaleString('ru-RU')}</span>
                 </div>
                 {item.text ? <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-100">{item.text}</p> : null}
-
-                {item.tags.length > 0 ? (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {item.tags.map((tag) => (
-                      <span key={`${item.id}-${tag}`} className="rounded bg-zinc-800/80 px-2 py-0.5 text-[11px] text-zinc-300">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-
+                {item.tags.length > 0 ? <div className="mt-2 flex flex-wrap gap-1">{item.tags.map((tag) => <span key={`${item.id}-${tag}`} className="rounded bg-zinc-800/80 px-2 py-0.5 text-[11px] text-zinc-300">#{tag}</span>)}</div> : null}
                 {item.links.length > 0 ? (
-                  <ul className="mt-2 space-y-1 text-xs text-violet-300">
-                    {item.links.map((link) => (
-                      <li key={`${item.id}-${link}`}>
-                        <a href={link} target="_blank" rel="noreferrer" className="hover:underline">
-                          {link}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+                  <ul className="mt-2 space-y-1 text-xs text-violet-300">{item.links.map((link) => <li key={`${item.id}-${link}`}><a href={link} target="_blank" rel="noreferrer" className="hover:underline">{link}</a></li>)}</ul>
                 ) : null}
-
-                {(item.hasPhoto || item.hasFile) && !item.text ? (
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {item.hasPhoto ? 'Содержит фото' : ''}
-                    {item.hasPhoto && item.hasFile ? ' · ' : ''}
-                    {item.hasFile ? 'Содержит файл' : ''}
-                  </p>
-                ) : null}
-
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <AppButton type="button" variant="ghost" onClick={() => setItemState(item.id, 'in_work')}>
-                    В работу
-                  </AppButton>
-                  <AppButton type="button" variant="ghost" onClick={() => setItemState(item.id, 'archived')}>
-                    В архив
-                  </AppButton>
-                  <AppButton type="button" variant="ghost" onClick={() => setItemState(item.id, 'inbox')}>
-                    Во входящие
-                  </AppButton>
+                  <AppButton type="button" variant="ghost" onClick={() => setItemState(item.id, 'in_work')}>В работу</AppButton>
+                  <AppButton type="button" variant="ghost" onClick={() => setItemState(item.id, 'archived')}>В архив</AppButton>
+                  <AppButton type="button" variant="ghost" onClick={() => setItemState(item.id, 'inbox')}>Во входящие</AppButton>
                 </div>
               </article>
             ))}
