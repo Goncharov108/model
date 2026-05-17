@@ -1,29 +1,50 @@
 # Деплой v1
 
-Цель: статика `web/dist` + health API `GET /api/health` (через nginx).
+Цель: выкладка `web/dist` и запуск API на сервере.
 
-## Предусловия
+## Минимальные предусловия
 
-- SSH-доступ по ключу (не пароль в репозитории)
-- Node 22, nginx, certbot
-- Пользователь `deploy` и каталоги из [SERVER.md](./SERVER.md)
+- SSH-доступ по ключу
+- На сервере установлены: Node 22, nginx, systemd
+- Созданы каталоги:
+  - `/var/www/model/web`
+  - `/opt/model/api`
 
-## Шаги
+## Рекомендуемый способ (единый скрипт)
 
-1. Локально или в CI: `cd web && npm ci && npm run build`
-2. Скопировать `web/dist/` на сервер → `/var/www/model/web`
-3. Скопировать `api/` (без `private/`) → `/opt/model/api`
-4. systemd unit для `node server.mjs` (слушать `127.0.0.1:3847`)
-5. nginx: SPA `try_files` + proxy `/api/` → backend
-6. DNS на reg.ru → [DNS_REG_RU.md](./DNS_REG_RU.md)
-7. certbot → HTTPS (`live-model.ru`, `www.live-model.ru`)
-8. Проверка: `curl -I https://live-model.ru` и `curl https://live-model.ru/api/health`
+Из корня репозитория:
 
-## Не копировать на сервер
+```bash
+DEPLOY_HOST=<IP_ИЛИ_HOST> DEPLOY_USER=deploy ./scripts/deploy_v1.sh
+```
 
-- `private/`
-- `.env` с секретами из репозитория (создать отдельный env на сервере)
+Опциональные переменные:
 
-## CI/CD v2 (опционально)
+- `SSH_PORT` (по умолчанию `22`)
+- `WEB_REMOTE_DIR` (по умолчанию `/var/www/model/web`)
+- `API_REMOTE_DIR` (по умолчанию `/opt/model/api`)
+- `API_SERVICE_NAME` (по умолчанию `model-api`)
 
-Workflow `deploy.yml` на `main`: build + rsync/scp через GitHub Secrets (`SSH_HOST`, `SSH_USER`, `SSH_KEY`) — после ручного деплоя v1 и по запросу владельца.
+Скрипт делает:
+
+1. `npm ci && npm run build` в `web/`
+2. Копирование `web/dist` на сервер
+3. Копирование `api/` на сервер
+4. `npm ci --omit=dev` на сервере
+5. `systemctl restart <API_SERVICE_NAME>`
+
+## Проверка после деплоя
+
+```bash
+curl -I https://live-model.ru
+curl -s https://live-model.ru/api/health
+curl -s -X POST https://live-model.ru/api/v1/text/inspect \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"проверка после деплоя"}'
+```
+
+## Важно
+
+- Не копировать `private/`
+- Не хранить секреты в репозитории
+- `.env` сервера создавать отдельно

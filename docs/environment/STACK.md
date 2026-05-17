@@ -2,31 +2,32 @@
 
 Имя репозитория: **model**. Monorepo: `web/` + `api/`.
 
-## Сейчас на сервере / в проде
+## Фактическое состояние (репозиторий / CI)
 
-| Слой | Технология | Версия | Где | Заметка |
-|------|------------|--------|-----|---------|
-| *(заполнить после деплоя)* | | | | |
+- Web UI: Vite + React + TypeScript (`web/`)
+- State: Zustand + persist (данные в `localStorage` браузера)
+- API: Node.js `http` (`api/server.mjs`)
+  - `GET /health`
+  - `POST /api/v1/text/inspect`
+- Node target: 22 (`.nvmrc`), engines: `>=20`
+- CI: `.github/workflows/ci.yml`
+  - web: `npm ci`, `lint`, `test`, `build`
+  - api: `check`, `smoke`
 
-## В репозитории (локально / CI)
+## Прод-слой (на текущий момент)
 
-| Слой | Технология | Версия | Где | Заметка |
-|------|------------|--------|-----|---------|
-| Web UI | Vite + React + TypeScript | vite ^8.0.12, react ^19.2.6, TS ~6.0.2 | `web/` | SWOD закон 6 |
-| Маршрутизация | react-router-dom | ^7.15.1 | `web/` | |
-| Состояние | zustand + persist | ^5.0.13 | `web/src/store/` | localStorage |
-| Стили | Tailwind CSS | ^4.3.0 | `web/` | @tailwindcss/vite |
-| API | Node `http` (placeholder) | `server.mjs` | `api/` | `GET /health`, PORT **3847** |
-| Node (целевой) | — | **22** (`.nvmrc`) | корень | engines web: >=20 |
-| CI | GitHub Actions | workflow `CI` | `.github/workflows/ci.yml` | lint, test, build, api-smoke |
+- Прод-сервер и финальный runtime-контур ещё не зафиксированы в репозитории.
+- Этот раздел заполняется после подключения production-хоста.
 
 ## Запланировано по канону-3
 
-См. `CANON_PROJECT_MASTER.txt` (продукт «Мастер», не имя репозитория). **Не внедрять всё сразу** — только документировать:
+См. `CANON_PROJECT_MASTER.txt` (стратегический контур):
 
-- Keycloak (IAM, OIDC)
+- Keycloak (IAM/OIDC)
 - OpenFGA (ReBAC)
 - PostgreSQL + RLS
 - MinIO / Nextcloud
-- NestJS backend (вместо placeholder)
-- Matrix/Synapse, Ollama, Telegram Bot API — стратегический контур
+- NestJS backend
+- Matrix/Synapse, Ollama, Telegram Bot API
+
+Важно: внедрение идёт поэтапно, не всё сразу.

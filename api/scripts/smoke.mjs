@@ -24,9 +24,25 @@ async function wait(ms) {
 
 async function fetchHealth(port) {
   const response = await fetch(`http://127.0.0.1:${port}/health`)
-  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  if (!response.ok) throw new Error(`health HTTP ${response.status}`)
   const json = await response.json()
-  if (json?.ok !== true) throw new Error('Поле ok !== true')
+  if (json?.ok !== true) throw new Error('health: поле ok !== true')
+  return json
+}
+
+async function fetchInspect(port) {
+  const response = await fetch(`http://127.0.0.1:${port}/api/v1/text/inspect`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: 'Привет мир из smoke теста' }),
+  })
+  if (!response.ok) throw new Error(`inspect HTTP ${response.status}`)
+
+  const json = await response.json()
+  if (json?.ok !== true) throw new Error('inspect: поле ok !== true')
+  if (typeof json?.data?.wordCount !== 'number' || json.data.wordCount < 1) {
+    throw new Error('inspect: некорректный wordCount')
+  }
   return json
 }
 
@@ -48,7 +64,8 @@ try {
   for (let i = 0; i < 20; i += 1) {
     try {
       const health = await fetchHealth(port)
-      process.stdout.write(`SMOKE_OK ${JSON.stringify(health)}\n`)
+      const inspect = await fetchInspect(port)
+      process.stdout.write(`SMOKE_OK ${JSON.stringify({ health, inspect })}\n`)
       child.kill('SIGTERM')
       process.exit(0)
     } catch (err) {

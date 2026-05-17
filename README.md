@@ -42,6 +42,7 @@ npm run start
 По умолчанию API слушает `127.0.0.1:3847` и отдаёт:
 
 - `GET /health` → `{ "ok": true, ... }`
+- `POST /api/v1/text/inspect` → базовый анализ текста (`textLength`, `wordCount`, `preview`)
 
 Переменные окружения:
 
@@ -70,4 +71,5 @@ GitHub Actions (`.github/workflows/ci.yml`) запускает:
 ## Деплой (кратко)
 
 - Статика web: `web/dist` → `/var/www/model/web/` на VPS
+- Рекомендуемый деплой: `scripts/deploy_v1.sh` (через `DEPLOY_HOST=...`)
 - Детали: `docs/environment/DEPLOY.md`
