@@ -1,0 +1,28 @@
+export type TelegramNoteGroup = 'video' | 'link' | 'text' | 'photo' | 'file' | 'other'
+
+export type TelegramNotePriority = 'high' | 'normal' | 'low'
+
+export type TelegramNoteState = 'inbox' | 'in_work' | 'archived'
+
+export interface TelegramNoteItem {
+  id: string
+  dateIso: string
+  text: string
+  group: TelegramNoteGroup
+  links: string[]
+  hasPhoto: boolean
+  hasFile: boolean
+  rawType?: string
+  tags: string[]
+  priority: TelegramNotePriority
+  state: TelegramNoteState
+  dedupeKey: string
+}
+
+export interface TelegramNotesSnapshot {
+  importedAtIso: string
+  sourceName: string
+  totalMessages: number
+  dedupedCount: number
+  items: TelegramNoteItem[]
+}

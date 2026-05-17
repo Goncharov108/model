@@ -10,6 +10,7 @@ export const PATH = {
     users: '/master-admin/users',
     philosophy: '/master-admin/philosophy',
     hermes: '/master-admin/hermes',
+    incoming: '/master-admin/incoming',
     advanced: {
       root: '/master-admin/advanced',
       stream: '/master-admin/advanced',
@@ -64,6 +65,7 @@ export const MASTER_ADMIN_NAV = [
   { to: PATH.masterAdmin.users, label: 'Пользователи' },
   { to: PATH.masterAdmin.philosophy, label: 'Философия' },
   { to: PATH.masterAdmin.hermes, label: 'Hermes' },
+  { to: PATH.masterAdmin.incoming, label: 'Входящий поток' },
   { to: PATH.masterAdmin.advanced.root, label: 'Продвинутые настройки' },
 ] as const
 

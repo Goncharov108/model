@@ -10,6 +10,7 @@ import { AccountSettingsWorkspace } from './routes/AccountSettingsWorkspace'
 import { MasterAdminEnvironmentWorkspace } from './routes/MasterAdminEnvironmentWorkspace'
 import { MasterAdminOverviewWorkspace } from './routes/MasterAdminOverviewWorkspace'
 import { MasterAdminHermesWorkspace } from './routes/MasterAdminHermesWorkspace'
+import { MasterAdminIncomingWorkspace } from './routes/MasterAdminIncomingWorkspace'
 import { MasterAdminPhilosophyWorkspace } from './routes/MasterAdminPhilosophyWorkspace'
 import { MasterAdminUsersWorkspace } from './routes/MasterAdminUsersWorkspace'
 import { OrchestraWorkspace } from './routes/OrchestraWorkspace'
@@ -38,6 +39,7 @@ export function AppRoutes() {
           <Route path="users" element={<MasterAdminUsersWorkspace />} />
           <Route path="philosophy" element={<MasterAdminPhilosophyWorkspace />} />
           <Route path="hermes" element={<MasterAdminHermesWorkspace />} />
+          <Route path="incoming" element={<MasterAdminIncomingWorkspace />} />
           <Route path="advanced" element={<AdvancedSettingsShell />}>
             <Route index element={<StreamWorkspace />} />
             <Route path="structures" element={<PromptStructuresWorkspace />} />
