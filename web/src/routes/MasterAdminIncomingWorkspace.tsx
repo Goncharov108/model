@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import type {
   TelegramNoteFolder,
   TelegramNoteGroup,
+  TelegramNoteItem,
   TelegramNotePriority,
   TelegramNoteState,
   TelegramRoutingRuleSet,
 } from '../domain/telegramNotes'
+import type { TelegramNotesStoreState } from '../store/telegramNotesStore'
 import { readTextFile } from '../lib/readTextFile'
 import { countByGroup, parseTelegramNotesExport } from '../lib/telegramNotes'
 import { useTelegramNotesStore } from '../store/telegramNotesStore'
@@ -46,33 +48,38 @@ const FOLDER_LABEL: Record<TelegramNoteFolder, string> = {
   misc: 'Разное',
 }
 
+/** Селектор zustand с типом стора (Hermes TG-заметки). */
+function useNotesStore<T>(selector: (s: TelegramNotesStoreState) => T): T {
+  return useTelegramNotesStore(selector)
+}
+
 export function MasterAdminIncomingWorkspace() {
-  const snapshot = useTelegramNotesStore((s) => s.snapshot)
-  const setSnapshot = useTelegramNotesStore((s) => s.setSnapshot)
-  const selectedIds = useTelegramNotesStore((s) => s.selectedIds)
-  const routingPresets = useTelegramNotesStore((s) => s.routingPresets)
-  const activePresetId = useTelegramNotesStore((s) => s.activePresetId)
-  const setActivePreset = useTelegramNotesStore((s) => s.setActivePreset)
-  const updateActivePreset = useTelegramNotesStore((s) => s.updateActivePreset)
-  const createPreset = useTelegramNotesStore((s) => s.createPreset)
-  const duplicateActivePreset = useTelegramNotesStore((s) => s.duplicateActivePreset)
-  const renameActivePreset = useTelegramNotesStore((s) => s.renameActivePreset)
-  const deleteActivePreset = useTelegramNotesStore((s) => s.deleteActivePreset)
-  const applyQuickMode = useTelegramNotesStore((s) => s.applyQuickMode)
-  const resetPresetsToDefault = useTelegramNotesStore((s) => s.resetPresetsToDefault)
-  const exportPresets = useTelegramNotesStore((s) => s.exportPresets)
-  const previewImportPresets = useTelegramNotesStore((s) => s.previewImportPresets)
-  const importPresets = useTelegramNotesStore((s) => s.importPresets)
-  const undoLastImport = useTelegramNotesStore((s) => s.undoLastImport)
-  const setItemState = useTelegramNotesStore((s) => s.setItemState)
-  const setItemFolder = useTelegramNotesStore((s) => s.setItemFolder)
-  const applyStateToSelected = useTelegramNotesStore((s) => s.applyStateToSelected)
-  const applyFolderToSelected = useTelegramNotesStore((s) => s.applyFolderToSelected)
-  const toggleSelected = useTelegramNotesStore((s) => s.toggleSelected)
-  const clearSelection = useTelegramNotesStore((s) => s.clearSelection)
-  const selectAll = useTelegramNotesStore((s) => s.selectAll)
-  const applyAutoRouting = useTelegramNotesStore((s) => s.applyAutoRouting)
-  const clear = useTelegramNotesStore((s) => s.clear)
+  const snapshot = useNotesStore((s) => s.snapshot)
+  const setSnapshot = useNotesStore((s) => s.setSnapshot)
+  const selectedIds = useNotesStore((s) => s.selectedIds)
+  const routingPresets = useNotesStore((s) => s.routingPresets)
+  const activePresetId = useNotesStore((s) => s.activePresetId)
+  const setActivePreset = useNotesStore((s) => s.setActivePreset)
+  const updateActivePreset = useNotesStore((s) => s.updateActivePreset)
+  const createPreset = useNotesStore((s) => s.createPreset)
+  const duplicateActivePreset = useNotesStore((s) => s.duplicateActivePreset)
+  const renameActivePreset = useNotesStore((s) => s.renameActivePreset)
+  const deleteActivePreset = useNotesStore((s) => s.deleteActivePreset)
+  const applyQuickMode = useNotesStore((s) => s.applyQuickMode)
+  const resetPresetsToDefault = useNotesStore((s) => s.resetPresetsToDefault)
+  const exportPresets = useNotesStore((s) => s.exportPresets)
+  const previewImportPresets = useNotesStore((s) => s.previewImportPresets)
+  const importPresets = useNotesStore((s) => s.importPresets)
+  const undoLastImport = useNotesStore((s) => s.undoLastImport)
+  const setItemState = useNotesStore((s) => s.setItemState)
+  const setItemFolder = useNotesStore((s) => s.setItemFolder)
+  const applyStateToSelected = useNotesStore((s) => s.applyStateToSelected)
+  const applyFolderToSelected = useNotesStore((s) => s.applyFolderToSelected)
+  const toggleSelected = useNotesStore((s) => s.toggleSelected)
+  const clearSelection = useNotesStore((s) => s.clearSelection)
+  const selectAll = useNotesStore((s) => s.selectAll)
+  const applyAutoRouting = useNotesStore((s) => s.applyAutoRouting)
+  const clear = useNotesStore((s) => s.clear)
 
   const [groupFilter, setGroupFilter] = useState<TelegramNoteGroup | 'all'>('all')
   const [stateFilter, setStateFilter] = useState<TelegramNoteState | 'all'>('all')
@@ -115,9 +122,9 @@ export function MasterAdminIncomingWorkspace() {
     }
   }, [snapshot])
 
-  const filteredItems = useMemo(() => {
+  const filteredItems = useMemo((): TelegramNoteItem[] => {
     const base = snapshot?.items ?? []
-    return base.filter((item) => {
+    return base.filter((item: TelegramNoteItem) => {
       if (groupFilter !== 'all' && item.group !== groupFilter) return false
       if (stateFilter !== 'all' && item.state !== stateFilter) return false
       if (folderFilter !== 'all' && item.folder !== folderFilter) return false

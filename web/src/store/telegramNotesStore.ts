@@ -54,7 +54,7 @@ type PresetImportResult = {
   mode: PresetImportMode
 }
 
-interface TelegramNotesStoreState {
+export interface TelegramNotesStoreState {
   snapshot: TelegramNotesSnapshot | null
   selectedIds: string[]
   routingPresets: TelegramRoutingRuleSet[]
@@ -207,7 +207,7 @@ let lastImportBackup: { routingPresets: TelegramRoutingRuleSet[]; activePresetId
 
 export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
   persist(
-    (set) => ({
+    (set, get): TelegramNotesStoreState => ({
       snapshot: null,
       selectedIds: [],
       routingPresets: DEFAULT_PRESETS,
@@ -324,8 +324,8 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
           return { activePresetId: exists ? targetId : store.activePresetId }
         }),
       resetPresetsToDefault: () => set({ routingPresets: DEFAULT_PRESETS, activePresetId: DEFAULT_PRESETS[0].id }),
-      exportPresets: () => {
-        const state = useTelegramNotesStore.getState()
+      exportPresets: (): TelegramPresetsExport => {
+        const state = get()
         return {
           version: 1,
           presets: state.routingPresets.filter((p) => !p.locked),
@@ -339,7 +339,7 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
             return { ok: false, error: 'Не найдено валидных пресетов в файле', items: [], skipped: parsedPresets.skipped, mode }
           }
 
-          const store = useTelegramNotesStore.getState()
+          const store = get()
           const base = DEFAULT_PRESETS
           const existingCustom = store.routingPresets.filter((p) => !p.locked)
           const baseNames = new Set((mode === 'merge' ? [...base, ...existingCustom] : base).map((p) => normName(p.name)))
@@ -357,7 +357,7 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
             return { ok: false, error: 'Не найдено валидных пресетов в файле', added: 0, renamed: 0, skipped: parsedPresets.skipped, mode }
           }
 
-          const storeBefore = useTelegramNotesStore.getState()
+          const storeBefore = get()
           const base = DEFAULT_PRESETS
           const existingCustom = storeBefore.routingPresets.filter((p) => !p.locked)
           const baseNames = new Set((mode === 'merge' ? [...base, ...existingCustom] : base).map((p) => normName(p.name)))
