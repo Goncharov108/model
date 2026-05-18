@@ -25,6 +25,42 @@
 
 ---
 
+## 2026-05-18 08:12 (MSK) — Аудит Hermes + режим `--brief` (тезисы/аргументы/рекомендации)
+
+- **Ветка:** `hermes/work` @ `HEAD`
+- **Сделано:**
+  - проведён аудит Hermes (doctor/status/gateway/tools/cron);
+  - применены донастройки безопасности и стабильности в конфиге Hermes:
+    - `privacy.redact_pii=true`
+    - `approvals.mode=smart`
+    - `security.tirith_fail_open=false`
+    - `auxiliary.*.model` для `vision/web_extract/session_search/approval` задан как `gpt-5.3-codex`
+    - `tts.edge.voice=ru-RU-SvetlanaNeural`
+  - в `api/scripts/video_note_telegram.py` добавлен флаг `--brief`:
+    - выводит структурный конспект одной командой: «Основные тезисы», «Аргументы автора», «Рекомендации автора»;
+    - для рекомендаций добавлена простая оценка «дельная/спорная» по формулировке;
+    - унифицирован human-вывод ошибок для `--brief` на ранних проверках (нет текста/ссылки).
+  - обновлена документация по запуску в `api/README.md`.
+- **Файлы:**
+  - `api/scripts/video_note_telegram.py`
+  - `api/README.md`
+  - `docs/sync/HERMES_HANDOFF.md`
+- **Тесты/проверки:**
+  - `python3 -m py_compile api/scripts/video_note.py api/scripts/video_note_telegram.py` → ok
+  - `cd api && npm run video:note:tg -- --help` → флаг `--brief` отображается
+  - `cd api && npm run video:note:tg -- --brief "... https://example.com/x"` → корректная человекочитаемая ошибка
+  - `cd api && npm run video:note:tg -- --brief "https://youtu.be/54PyGsVw3kE?..." --no-asr-fallback` → успешный структурный конспект
+  - `cd api && npm run test` → ok (`check + smoke`)
+- **Деплой / сервисы:**
+  - код/доки: деплой не делался;
+  - сервис Hermes Gateway: обнаружен устаревший unit, требуется ручной root-шаг `sudo hermes gateway restart --system`.
+- **Нужно в Cursor:**
+  - при желании улучшить качество блока «Рекомендации автора» (сейчас эвристика по текстовым маркерам);
+  - после root-рестарта gateway проверить, что warning про outdated unit исчез.
+- **Риски:**
+  - `--brief` сейчас использует эвристики и может местами захватывать «шумные» фразы из транскрипта;
+  - без root-прав нельзя обновить systemd unit сервиса из Hermes-пользователя.
+
 ## 2026-05-18 07:54 (MSK) — Человекочитаемый формат ответа для Telegram video_note wrapper
 
 - **Ветка:** `hermes/work` @ `HEAD`

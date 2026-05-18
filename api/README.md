@@ -76,6 +76,12 @@ echo "https://youtube.com/watch?v=VIDEO_ID" | npm run video:note:tg -- --stdin
 npm run video:note:tg -- --human "Смотри https://youtube.com/watch?v=VIDEO_ID"
 ```
 
+Структурный конспект одной командой (тезисы + аргументы + рекомендации автора):
+
+```bash
+npm run video:note:tg -- --brief "Смотри https://youtube.com/watch?v=VIDEO_ID"
+```
+
 Можно указать язык и модель ASR:
 
 ```bash

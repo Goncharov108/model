@@ -14,6 +14,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Iterable
 
 
 URL_RE = re.compile(r"https?://[^\s]+", re.IGNORECASE)
@@ -126,6 +127,77 @@ def render_human_error(error: str, hint: str = "") -> str:
     return base
 
 
+def _split_sentences(text: str) -> list[str]:
+    chunks = re.split(r"(?<=[.!?])\s+|\n+", text or "")
+    out: list[str] = []
+    for chunk in chunks:
+        clean = " ".join(chunk.split()).strip("-• ")
+        if len(clean) >= 24:
+            out.append(clean)
+    return out
+
+
+def _unique_keep_order(items: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for item in items:
+        key = item.lower().strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
+
+
+def render_human_briefing(url: str, payload: dict) -> str:
+    note = _note_to_text(payload.get("note"))
+    transcript = str(payload.get("transcript") or "").strip()
+    merged_text = "\n".join(part for part in (note, transcript) if part)
+    sentences = _split_sentences(merged_text)
+
+    thesis = _unique_keep_order(sentences[:5])
+
+    arg_markers = ("потому", "так как", "поэтому", "следовательно", "доказ", "например", "факт", "цифр", "%")
+    arguments = [s for s in sentences if any(m in s.lower() for m in arg_markers)]
+    arguments = _unique_keep_order(arguments)[:5]
+
+    rec_markers = ("нужно", "стоит", "рекоменду", "совет", "лучше", "сделайте", "делай", "делайте", "начните", "попробуйте")
+    recommendations = [s for s in sentences if any(m in s.lower() for m in rec_markers)]
+    recommendations = _unique_keep_order(recommendations)[:5]
+
+    lines = [
+        "Готово. Разобрал видео и собрал конспект.",
+        f"Ссылка: {url}",
+        "",
+        "Основные тезисы:",
+    ]
+    if thesis:
+        lines.extend([f"- {_truncate(t, 220)}" for t in thesis])
+    else:
+        lines.append("- Недостаточно данных для выделения тезисов.")
+
+    lines.extend(["", "Аргументы автора:"])
+    if arguments:
+        lines.extend([f"- {_truncate(a, 220)}" for a in arguments])
+    else:
+        lines.append("- Явные аргументы в расшифровке не выделились.")
+
+    lines.extend(["", "Рекомендации автора (оценка: дельные/не дельные):"])
+    if recommendations:
+        for rec in recommendations:
+            rec_low = rec.lower()
+            score = "дельная"
+            why = "практическая и применимая"
+            if any(x in rec_low for x in ("всегда", "никогда", "100%", "гарант")):
+                score = "спорная"
+                why = "слишком категоричная формулировка"
+            lines.append(f"- {_truncate(rec, 180)} — {score}, {why}.")
+    else:
+        lines.append("- Явные практические рекомендации не обнаружены.")
+
+    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Telegram-обвязка для video_note")
     parser.add_argument("message", nargs="?", help="Текст сообщения Telegram")
@@ -134,6 +206,11 @@ def main() -> int:
         "--human",
         action="store_true",
         help="Вернуть короткий человекочитаемый текст вместо JSON",
+    )
+    parser.add_argument(
+        "--brief",
+        action="store_true",
+        help="Вернуть структурный конспект: тезисы, аргументы, рекомендации автора",
     )
     parser.add_argument("--language", default="ru,en", help="Языки для video_note (по умолчанию: ru,en)")
     parser.add_argument("--asr-model", default="small", help="Модель ASR (по умолчанию: small)")
@@ -152,7 +229,7 @@ def main() -> int:
     if not text.strip():
         error = "EMPTY_MESSAGE"
         hint = "Передайте текст сообщения с видео-ссылкой."
-        if args.human:
+        if args.human or args.brief:
             print(render_human_error(error, hint))
         else:
             print(json.dumps({"ok": False, "error": error, "hint": hint}, ensure_ascii=False))
@@ -162,7 +239,7 @@ def main() -> int:
     if not url:
         error = "VIDEO_URL_NOT_FOUND"
         hint = "В тексте не найдена ссылка YouTube/Instagram/Facebook/TikTok."
-        if args.human:
+        if args.human or args.brief:
             print(render_human_error(error, hint))
         else:
             print(json.dumps({"ok": False, "error": error, "hint": hint}, ensure_ascii=False))
@@ -183,9 +260,12 @@ def main() -> int:
         "result": payload,
     }
 
-    if args.human:
+    if args.human or args.brief:
         if out["ok"]:
-            print(render_human_success(url=url, payload=payload))
+            if args.brief:
+                print(render_human_briefing(url=url, payload=payload))
+            else:
+                print(render_human_success(url=url, payload=payload))
         else:
             err = str(payload.get("error") or "UNKNOWN_ERROR")
             hint = str(payload.get("hint") or payload.get("details") or "")
