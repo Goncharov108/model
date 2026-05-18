@@ -62,6 +62,14 @@ npm run video:note -- "https://youtube.com/watch?v=VIDEO_ID"
 npm run video:note -- "https://www.instagram.com/reel/REEL_ID/"
 ```
 
+Telegram-обвязка (подаёте сырое текстовое сообщение, скрипт сам вытащит ссылку и запустит `video_note`):
+
+```bash
+npm run video:note:tg -- "Смотри https://www.instagram.com/reel/REEL_ID/"
+# или через stdin:
+echo "https://youtube.com/watch?v=VIDEO_ID" | npm run video:note:tg -- --stdin
+```
+
 Можно указать язык и модель ASR:
 
 ```bash

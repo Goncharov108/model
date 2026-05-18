@@ -25,6 +25,32 @@
 
 ---
 
+## 2026-05-18 07:49 (MSK) — Мини-обвязка под Telegram-вход для video_note
+
+- **Ветка:** `hermes/work` @ `HEAD`
+- **Сделано:**
+  - добавлен скрипт `api/scripts/video_note_telegram.py`:
+    - принимает сырое сообщение (аргументом или через `--stdin`);
+    - автоматически извлекает видео-ссылку (YouTube/Instagram/Facebook/TikTok);
+    - запускает `video_note.py` с теми же флагами ASR и возвращает единый JSON-ответ.
+  - в `api/package.json` добавлен npm-скрипт: `video:note:tg`.
+  - в `api/README.md` добавлены примеры запуска Telegram-обвязки.
+- **Файлы:**
+  - `api/scripts/video_note_telegram.py`
+  - `api/package.json`
+  - `api/README.md`
+  - `docs/sync/HERMES_HANDOFF.md`
+- **Тесты/проверки:**
+  - `python3 -m py_compile api/scripts/video_note.py api/scripts/video_note_telegram.py` → ok
+  - `npm run video:note:tg -- "Привет! Вот ссылка https://example.com/x"` → корректный `VIDEO_URL_NOT_FOUND`
+  - `npm run video:note:tg -- "Смотри https://youtube.com/watch?v=dQw4w9WgXcQ" --no-asr-fallback` → ok, транскрипт/заметка получены
+  - `cd api && npm run test` → ok (`check + smoke`)
+- **Деплой / сервисы:** нет
+- **Нужно в Cursor:**
+  - решить, нужно ли ограничить объём `transcript` в ответе Telegram-обвязки (сейчас отдаётся полный текст);
+  - при желании добавить краткий «человеческий» формат ответа поверх JSON для UI-бота.
+- **Риски:** для некоторых соцссылок `yt-dlp` может требовать cookies/авторизацию.
+
 ## 2026-05-18 07:44 (MSK) — ASR-фолбэк v2 для video_note (автоскачивание аудио + распознавание)
 
 - **Ветка:** `hermes/work` @ `HEAD`

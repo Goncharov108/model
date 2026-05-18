@@ -10,6 +10,7 @@
     "check": "node --check server.mjs && node --check scripts/smoke.mjs",
     "smoke": "node scripts/smoke.mjs",
     "video:note": "python3 scripts/video_note.py",
+    "video:note:tg": "python3 scripts/video_note_telegram.py",
     "test": "npm run check && npm run smoke"
   },
   "engines": {
