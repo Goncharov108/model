@@ -25,6 +25,30 @@
 
 ---
 
+## 2026-05-18 07:54 (MSK) — Человекочитаемый формат ответа для Telegram video_note wrapper
+
+- **Ветка:** `hermes/work` @ `HEAD`
+- **Сделано:**
+  - в `api/scripts/video_note_telegram.py` добавлен флаг `--human` для короткого ответа без JSON;
+  - реализован формат текста для чата: заголовок, ссылка, краткая заметка, ключевые слова (если есть), фрагмент расшифровки;
+  - добавлена аккуратная обрезка длинных блоков (`…`), чтобы сообщение не разрасталось;
+  - добавлена нормализация `note`, когда `video_note.py` возвращает объект (берётся `short_summary`/`summary`/`text`).
+- **Файлы:**
+  - `api/scripts/video_note_telegram.py`
+  - `api/README.md`
+  - `docs/sync/HERMES_HANDOFF.md`
+- **Тесты/проверки:**
+  - `python3 -m py_compile api/scripts/video_note.py api/scripts/video_note_telegram.py` → ok
+  - `cd api && npm run video:note:tg -- --help` → флаг `--human` отображается
+  - `cd api && npm run video:note:tg -- --human "Привет! Вот ссылка https://example.com/x"` → корректная человекочитаемая ошибка
+  - `cd api && npm run video:note:tg -- --human "Смотри https://youtube.com/watch?v=dQw4w9WgXcQ" --no-asr-fallback` → корректный человекочитаемый успех
+  - `cd api && npm run test` → ok (`check + smoke`)
+- **Деплой / сервисы:** нет
+- **Нужно в Cursor:**
+  - решить, включать ли `--human` по умолчанию в точке вызова Telegram-бота;
+  - при необходимости сократить лимиты обрезки (`note`/`transcript`) под желаемый размер сообщения.
+- **Риски:** при длинных расшифровках сообщение всё ещё может быть заметно большим, хотя уже ограничено обрезкой.
+
 ## 2026-05-18 07:49 (MSK) — Мини-обвязка под Telegram-вход для video_note
 
 - **Ветка:** `hermes/work` @ `HEAD`

@@ -70,6 +70,12 @@ npm run video:note:tg -- "Смотри https://www.instagram.com/reel/REEL_ID/"
 echo "https://youtube.com/watch?v=VIDEO_ID" | npm run video:note:tg -- --stdin
 ```
 
+Человекочитаемый ответ для чата (без JSON):
+
+```bash
+npm run video:note:tg -- --human "Смотри https://youtube.com/watch?v=VIDEO_ID"
+```
+
 Можно указать язык и модель ASR:
 
 ```bash
