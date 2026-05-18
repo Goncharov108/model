@@ -43,21 +43,35 @@ npm run test    # check + smoke
 Добавлен CLI-скрипт: `api/scripts/video_note.py`.
 
 Что делает:
-- YouTube (`watch`, `youtu.be`, `shorts`): пытается взять субтитры и вернуть JSON с `transcript` + `note`.
-- Reels/другие соцссылки: честно сообщает, что нужен ASR-фолбэк (Whisper/Faster-Whisper).
+- YouTube (`watch`, `youtu.be`, `shorts`): берёт субтитры, а если их нет — включает ASR-фолбэк v2.
+- Reels/другие соцссылки: сразу пробует ASR-фолбэк v2 (автоскачивание аудио + распознавание).
+
+Зависимости для полного режима (ASR):
+
+```bash
+cd api
+pip install youtube-transcript-api yt-dlp faster-whisper
+# или вместо faster-whisper:
+# pip install openai-whisper
+```
 
 Быстрый запуск:
 
 ```bash
-cd api
-pip install youtube-transcript-api
 npm run video:note -- "https://youtube.com/watch?v=VIDEO_ID"
+npm run video:note -- "https://www.instagram.com/reel/REEL_ID/"
 ```
 
-Можно указать языки субтитров:
+Можно указать язык и модель ASR:
 
 ```bash
-npm run video:note -- "https://youtube.com/shorts/VIDEO_ID" --language ru,en
+npm run video:note -- "https://youtube.com/shorts/VIDEO_ID" --language ru,en --asr-model small
+```
+
+Фолбэк можно отключить:
+
+```bash
+npm run video:note -- "https://youtube.com/watch?v=VIDEO_ID" --no-asr-fallback
 ```
 
 Заготовка миграций и RLS: каталог `migrations/` и `docs/RLS_NOTES.md`.

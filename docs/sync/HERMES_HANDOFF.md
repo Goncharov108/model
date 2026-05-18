@@ -25,6 +25,34 @@
 
 ---
 
+## 2026-05-18 07:44 (MSK) — ASR-фолбэк v2 для video_note (автоскачивание аудио + распознавание)
+
+- **Ветка:** `hermes/work` @ `HEAD`
+- **Сделано:**
+  - в `api/scripts/video_note.py` реализован ASR-фолбэк v2:
+    - автоскачивание аудио через `yt-dlp`;
+    - распознавание через `faster-whisper` (приоритетно) или `openai-whisper` (запасной вариант);
+    - для YouTube: при недоступных субтитрах автоматически запускается ASR;
+    - для `instagram/facebook/tiktok` (reels/shorts): запускается ASR «из коробки»;
+    - добавлены аргументы `--asr-fallback/--no-asr-fallback` и `--asr-model`.
+  - обновлён `api/README.md`: зависимости, новые примеры запуска, управление фолбэком.
+- **Файлы:**
+  - `api/scripts/video_note.py`
+  - `api/README.md`
+  - `docs/sync/HERMES_HANDOFF.md`
+- **Тесты/проверки:**
+  - `python3 -m py_compile api/scripts/video_note.py` → ok
+  - `python3 api/scripts/video_note.py "https://example.com/video"` → корректный `UNSUPPORTED_LINK`
+  - `python3 api/scripts/video_note.py --help` → новые флаги отображаются
+  - `cd api && npm run test` → ok (`check + smoke`)
+- **Деплой / сервисы:** нет
+- **Нужно в Cursor:**
+  - проверить на реальной ссылке Reels/Shorts в среде с доступом к видео;
+  - при необходимости выбрать дефолтную модель (`small`/`base`) под скорость/качество.
+- **Риски:**
+  - для ASR нужны внешние зависимости (`yt-dlp` + `faster-whisper` или `openai-whisper`);
+  - отдельные соцссылки могут требовать cookies/авторизацию у `yt-dlp`.
+
 ## 2026-05-17 23:09 (MSK) — Этапы 14–17 + функция видео-заметок
 
 - **Ветка:** `hermes/work` @ `HEAD`
