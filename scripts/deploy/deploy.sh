@@ -6,6 +6,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 WEB_DIR="$ROOT_DIR/web"
 API_DIR="$ROOT_DIR/api"
 NGINX_CONF="$ROOT_DIR/scripts/deploy/nginx-model.conf"
+NGINX_HERMES_HOST_CONF="$ROOT_DIR/scripts/deploy/nginx-hermes-host.conf"
 
 DEPLOY_HOST="${DEPLOY_HOST:-104.171.141.49}"
 DEPLOY_USER="${DEPLOY_USER:-root}"
@@ -70,6 +71,11 @@ echo "[6/6] Права deploy + nginx..."
 NGINX_CMD="chown -R deploy:deploy /var/www/model /opt/model/api 2>/dev/null || true"
 if [[ "$DEPLOY_NGINX" == "1" && -f "$NGINX_CONF" ]]; then
   scp "${SCP_OPTS[@]}" "$NGINX_CONF" "$SSH_TARGET:/etc/nginx/sites-available/model"
+  NGINX_CMD="$NGINX_CMD && ln -sf /etc/nginx/sites-available/model /etc/nginx/sites-enabled/model"
+  if [[ -f "$NGINX_HERMES_HOST_CONF" ]]; then
+    scp "${SCP_OPTS[@]}" "$NGINX_HERMES_HOST_CONF" "$SSH_TARGET:/etc/nginx/sites-available/hermes-host"
+    NGINX_CMD="$NGINX_CMD && ln -sf /etc/nginx/sites-available/hermes-host /etc/nginx/sites-enabled/hermes-host"
+  fi
   NGINX_CMD="$NGINX_CMD && nginx -t && systemctl reload nginx"
 fi
 ssh "${SSH_OPTS[@]}" "$SSH_TARGET" "$NGINX_CMD"

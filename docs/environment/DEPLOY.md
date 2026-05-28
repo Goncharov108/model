@@ -6,9 +6,9 @@
 
 - [x] VPS **104.171.141.49**, Ubuntu 24.04, пользователь `deploy`
 - [x] Node 22, nginx, **model-api** (порт 3847)
-- [x] Hermes dashboard `:9119`, префикс `/hermes/`
-- [ ] DNS **live-model.ru** → IP (проверить у регистратора)
-- [ ] certbot HTTPS
+- [x] Hermes dashboard `:9119`, префикс `/hermes/` — **нативный URL:** `https://live-model.ru/hermes/` (не `/master-admin/hermes`)
+- [x] DNS **live-model.ru** → IP (работает по HTTP/HTTPS)
+- [x] certbot HTTPS (Let's Encrypt, автообновление; редирект http→https)
 
 ## Деплой с Mac (рекомендуется)
 
@@ -18,6 +18,7 @@
 ./scripts/deploy/deploy.sh
 DEPLOY_NGINX=1 ./scripts/deploy/deploy.sh
 SKIP_API=1 ./scripts/deploy/deploy.sh
+./scripts/deploy/fix-hermes-codex-runtime.sh
 ```
 
 | Переменная | По умолчанию | Назначение |
@@ -31,6 +32,25 @@ SKIP_API=1 ./scripts/deploy/deploy.sh
 Алиас: `./scripts/deploy_v1.sh` → тот же скрипт.
 
 После выкладки UI: **Cmd+Shift+R** в браузере.
+
+## Hermes hotfix после обновлений
+
+Если после обновления `hermes` снова появляются ошибки вида:
+- `NoneType object is not iterable`
+- `Invalid API response ... response.output is empty`
+- `Auxiliary title generation failed ...`
+
+запусти:
+
+```bash
+DEPLOY_HOST=93.183.71.104 ./scripts/deploy/fix-hermes-codex-runtime.sh
+```
+
+Скрипт:
+- вносит патчи в `run_agent.py` и `agent/title_generator.py` на сервере;
+- проверяет синтаксис (`py_compile`);
+- перезапускает `hermes-gateway`;
+- делает smoke-test от пользователя `hermes`.
 
 ## Проверка
 

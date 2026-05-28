@@ -1,9 +1,12 @@
+/** Постоянный URL нативного Hermes вне оболочки model (прод). */
+export const HERMES_NATIVE_DASHBOARD_URL = 'https://hermes.live-model.ru/'
+
 /** URL дашборда Hermes для iframe (прод: nginx /hermes/; dev: vite-proxy при туннеле). */
 export function getHermesDashboardUrl(): string {
   if (import.meta.env.DEV) {
     return `${window.location.origin}/hermes/`
   }
-  return `${window.location.origin}/hermes/`
+  return HERMES_NATIVE_DASHBOARD_URL
 }
 
 /** SSH-туннель для локальной разработки без nginx на VPS. */
