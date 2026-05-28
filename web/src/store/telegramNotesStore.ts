@@ -207,7 +207,7 @@ let lastImportBackup: { routingPresets: TelegramRoutingRuleSet[]; activePresetId
 
 export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       snapshot: null,
       selectedIds: [],
       routingPresets: DEFAULT_PRESETS,
@@ -325,7 +325,7 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
         }),
       resetPresetsToDefault: () => set({ routingPresets: DEFAULT_PRESETS, activePresetId: DEFAULT_PRESETS[0].id }),
       exportPresets: () => {
-        const state = useTelegramNotesStore.getState()
+        const state = get()
         return {
           version: 1,
           presets: state.routingPresets.filter((p) => !p.locked),
@@ -339,7 +339,7 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
             return { ok: false, error: 'Не найдено валидных пресетов в файле', items: [], skipped: parsedPresets.skipped, mode }
           }
 
-          const store = useTelegramNotesStore.getState()
+          const store = get()
           const base = DEFAULT_PRESETS
           const existingCustom = store.routingPresets.filter((p) => !p.locked)
           const baseNames = new Set((mode === 'merge' ? [...base, ...existingCustom] : base).map((p) => normName(p.name)))
@@ -357,7 +357,7 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
             return { ok: false, error: 'Не найдено валидных пресетов в файле', added: 0, renamed: 0, skipped: parsedPresets.skipped, mode }
           }
 
-          const storeBefore = useTelegramNotesStore.getState()
+          const storeBefore = get()
           const base = DEFAULT_PRESETS
           const existingCustom = storeBefore.routingPresets.filter((p) => !p.locked)
           const baseNames = new Set((mode === 'merge' ? [...base, ...existingCustom] : base).map((p) => normName(p.name)))
@@ -424,7 +424,7 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
     }),
     {
       name: 'model-telegram-notes-v1',
-      partialize: (state) => ({
+      partialize: (state: TelegramNotesStoreState) => ({
         snapshot: state.snapshot,
         routingPresets: state.routingPresets,
         activePresetId: state.activePresetId,

@@ -25,6 +25,36 @@
 
 ---
 
+## 2026-05-28 23:26 (MSK) — Визуализация incoming + seed последнего Hermes-видео
+
+- **Ветка:** `hermes/work` @ `HEAD`
+- **Сделано:**
+  - на странице `web/src/routes/MasterAdminIncomingWorkspace.tsx` добавлен новый визуальный слой для `/master-admin/incoming`:
+    - вкладки `Граф` / `Таймлайн` / `Кластеры`;
+    - верхние insight-карточки по текущему входящему потоку;
+    - встроенный graph-layer без внешней graph-библиотеки (SVG + позиционированные узлы);
+  - добавлен seed последнего разобранного видео про Hermes Agent: если snapshot пустой, workspace автоматически поднимает стартовые элементы из ролика `https://youtu.be/k5NhsF7t68M`; также добавлена кнопка `Загрузить seed-видео`.
+  - вынесена логика производных визуализаций в `web/src/lib/telegramIncomingVisuals.ts`.
+  - добавлены unit-тесты `web/src/lib/telegramIncomingVisuals.test.ts`.
+  - исправлена типизация `web/src/store/telegramNotesStore.ts` через `persist((set, get) => ...)`, чтобы снова проходила prod-сборка web.
+- **Файлы:**
+  - `web/src/routes/MasterAdminIncomingWorkspace.tsx`
+  - `web/src/lib/telegramIncomingVisuals.ts`
+  - `web/src/lib/telegramIncomingVisuals.test.ts`
+  - `web/src/store/telegramNotesStore.ts`
+  - `docs/sync/HERMES_HANDOFF.md`
+- **Тесты/проверки:**
+  - `cd web && npm test -- src/lib/telegramIncomingVisuals.test.ts src/store/telegramNotesStore.test.ts` → ok (`13 passed`)
+  - `cd web && npm run build` → ok
+- **Деплой / сервисы:**
+  - попытка `SKIP_API=1 ./scripts/deploy/deploy.sh` с VPS-сервера упёрлась в сетевой таймаут на `ssh 104.171.141.49:22`; артефакты web собраны локально, но выкладка на прод из этой сессии не завершена.
+- **Нужно в Cursor:**
+  - если нужен настоящий интерактивный graph editor, следующим шагом можно заменить встроенный SVG-layer на `React Flow`;
+  - довыкатить web на `live-model.ru`, когда из среды снова будет доступен SSH до `104.171.141.49`.
+- **Риски:**
+  - текущий граф — read-only визуализация, без drag-and-drop и ручной правки связей;
+  - прод-домен пока может показывать старую версию, потому что deploy не дошёл до rsync/ssh.
+
 ## 2026-05-18 08:12 (MSK) — Аудит Hermes + режим `--brief` (тезисы/аргументы/рекомендации)
 
 - **Ветка:** `hermes/work` @ `HEAD`
