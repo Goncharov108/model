@@ -4,7 +4,8 @@
 
 ## Статус инфраструктуры
 
-- [x] VPS **104.171.141.49**, Ubuntu 24.04, пользователь `deploy`
+- [x] VPS **93.183.71.104** (RU-8, prod `live-model.ru`), Ubuntu 24.04, пользователь `deploy`
+- [x] Старый NL VPS **104.171.141.49** — архив, DNS больше не указывает
 - [x] Node 22, nginx, **model-api** (порт 3847)
 - [x] Hermes dashboard `:9119`, префикс `/hermes/` — **нативный URL:** `https://live-model.ru/hermes/` (не `/master-admin/hermes`)
 - [x] DNS **live-model.ru** → IP (работает по HTTP/HTTPS)
@@ -23,15 +24,19 @@ SKIP_API=1 ./scripts/deploy/deploy.sh
 
 | Переменная | По умолчанию | Назначение |
 |------------|--------------|------------|
-| `DEPLOY_HOST` | `104.171.141.49` | IP или хост |
+| `DEPLOY_HOST` | `93.183.71.104` | IP или хост (prod `live-model.ru`) |
 | `DEPLOY_USER` | `root` | SSH-пользователь |
 | `SSH_KEY` | `~/.ssh/id_ed25519` | Ключ |
-| `DEPLOY_NGINX` | `0` | `1` — выкатить `nginx-model.conf` и reload |
+| `DEPLOY_NGINX` | `0` | `1` — выкатить `nginx-model.conf`, reload и **авто-HTTPS** (certbot) |
+| `DEPLOY_RESTORE_HTTPS` | `1` | `0` — не вызывать `restore-nginx-https.sh` после nginx |
+| `CERTBOT_EMAIL` | — | e-mail для **первого** выпуска сертификата, если на сервере ещё нет cert |
 | `SKIP_WEB` / `SKIP_API` | `0` | `1` — пропустить часть |
 
 Алиас: `./scripts/deploy_v1.sh` → тот же скрипт.
 
 После выкладки UI: **Cmd+Shift+R** в браузере.
+
+При `DEPLOY_NGINX=1` после reload автоматически вызывается `scripts/deploy/restore-nginx-https.sh` (certbot повторно вешает TLS на `live-model.ru`, `www`, `hermes.live-model.ru`). Конфиг в репо — только HTTP:80; HTTPS восстанавливается на сервере.
 
 ## Hermes hotfix после обновлений
 

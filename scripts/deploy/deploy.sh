@@ -8,7 +8,7 @@ API_DIR="$ROOT_DIR/api"
 NGINX_CONF="$ROOT_DIR/scripts/deploy/nginx-model.conf"
 NGINX_HERMES_HOST_CONF="$ROOT_DIR/scripts/deploy/nginx-hermes-host.conf"
 
-DEPLOY_HOST="${DEPLOY_HOST:-104.171.141.49}"
+DEPLOY_HOST="${DEPLOY_HOST:-93.183.71.104}"
 DEPLOY_USER="${DEPLOY_USER:-root}"
 SSH_PORT="${SSH_PORT:-22}"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_ed25519}"
@@ -80,4 +80,8 @@ if [[ "$DEPLOY_NGINX" == "1" && -f "$NGINX_CONF" ]]; then
 fi
 ssh "${SSH_OPTS[@]}" "$SSH_TARGET" "$NGINX_CMD"
 
-echo "DONE: deploy complete → http://${DEPLOY_HOST}/"
+if [[ "$DEPLOY_NGINX" == "1" ]]; then
+  bash "$ROOT_DIR/scripts/deploy/restore-nginx-https.sh"
+fi
+
+echo "DONE: deploy complete → https://live-model.ru/ (IP: http://${DEPLOY_HOST}/)"
