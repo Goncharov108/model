@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildIncomingClusters, buildIncomingGraphData, buildIncomingInsights, buildIncomingTimeline, createHermesVideoSeedSnapshot } from './telegramIncomingVisuals'
+import {
+  buildIncomingClusters,
+  buildIncomingEntityMap,
+  buildIncomingGraphData,
+  buildIncomingInsights,
+  buildIncomingTimeline,
+  createHermesVideoSeedSnapshot,
+} from './telegramIncomingVisuals'
 
 describe('telegramIncomingVisuals', () => {
   it('строит seed snapshot по последнему видео', () => {
@@ -21,5 +28,16 @@ describe('telegramIncomingVisuals', () => {
     expect(timeline.length).toBeGreaterThan(0)
     expect(insights).toHaveLength(4)
     expect(clusters).toHaveLength(4)
+  })
+
+  it('строит слой сущностей и связи между ними', () => {
+    const snapshot = createHermesVideoSeedSnapshot()
+    const entityMap = buildIncomingEntityMap(snapshot.items)
+
+    expect(entityMap.entities.length).toBeGreaterThan(0)
+    expect(entityMap.entities.some((entity) => entity.kind === 'project' && entity.label.toLowerCase().includes('hermes'))).toBe(true)
+    expect(entityMap.entities.some((entity) => entity.kind === 'task')).toBe(true)
+    expect(entityMap.noteLinks.length).toBeGreaterThan(0)
+    expect(entityMap.relations.length).toBeGreaterThan(0)
   })
 })

@@ -9,11 +9,14 @@ import type {
 import { readTextFile } from '../lib/readTextFile'
 import {
   buildIncomingClusters,
+  buildIncomingEntityMap,
   buildIncomingGraphData,
   buildIncomingInsights,
   buildIncomingTimeline,
   createHermesVideoSeedSnapshot,
   type IncomingClusterCard,
+  type IncomingEntityCard,
+  type IncomingEntityMap,
   type IncomingGraphData,
   type IncomingInsightCard,
   type IncomingTimelineBucket,
@@ -61,6 +64,7 @@ const VISUAL_TABS = [
   { id: 'graph', label: 'Граф' },
   { id: 'timeline', label: 'Таймлайн' },
   { id: 'clusters', label: 'Кластеры' },
+  { id: 'entities', label: 'Сущности' },
 ] as const
 
 type VisualTabId = (typeof VISUAL_TABS)[number]['id']
@@ -184,6 +188,7 @@ export function MasterAdminIncomingWorkspace() {
   const timeline = useMemo(() => buildIncomingTimeline(filteredItems), [filteredItems])
   const insights = useMemo(() => buildIncomingInsights(filteredItems), [filteredItems])
   const clusters = useMemo(() => buildIncomingClusters(filteredItems), [filteredItems])
+  const entityMap = useMemo(() => buildIncomingEntityMap(filteredItems), [filteredItems])
 
   async function handleImport(file: File) {
     setBusy(true)
@@ -348,6 +353,7 @@ export function MasterAdminIncomingWorkspace() {
           {visualTab === 'graph' ? <IncomingGraphPanel data={graphData} /> : null}
           {visualTab === 'timeline' ? <IncomingTimelinePanel timeline={timeline} /> : null}
           {visualTab === 'clusters' ? <IncomingClustersPanel clusters={clusters} /> : null}
+          {visualTab === 'entities' ? <IncomingEntitiesPanel entityMap={entityMap} /> : null}
         </div>
       </SurfaceCard>
 
@@ -865,9 +871,13 @@ function IncomingGraphPanel(props: { data: IncomingGraphData }) {
               ? 'border-violet-400/80 bg-violet-500/20'
               : node.kind === 'folder'
                 ? 'border-sky-400/70 bg-sky-500/10'
-                : node.kind === 'tag'
-                  ? 'border-emerald-400/60 bg-emerald-500/10'
-                  : 'border-zinc-700 bg-zinc-900/85'
+                : node.kind === 'entity_group'
+                  ? 'border-amber-400/70 bg-amber-500/10'
+                  : node.kind === 'entity'
+                    ? 'border-fuchsia-400/70 bg-fuchsia-500/10'
+                    : node.kind === 'tag'
+                      ? 'border-emerald-400/60 bg-emerald-500/10'
+                      : 'border-zinc-700 bg-zinc-900/85'
           return (
             <div
               key={node.id}
@@ -931,6 +941,96 @@ function IncomingClustersPanel(props: { clusters: IncomingClusterCard[] }) {
           </ul>
         </div>
       ))}
+    </div>
+  )
+}
+
+function IncomingEntitiesPanel(props: { entityMap: IncomingEntityMap }) {
+  const entityBuckets = {
+    person: props.entityMap.entities.filter((entity) => entity.kind === 'person'),
+    project: props.entityMap.entities.filter((entity) => entity.kind === 'project'),
+    idea: props.entityMap.entities.filter((entity) => entity.kind === 'idea'),
+    task: props.entityMap.entities.filter((entity) => entity.kind === 'task'),
+  }
+
+  const relationPreview = props.entityMap.relations.slice(0, 8)
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+        <p className="text-sm font-semibold text-zinc-100">Жёсткий слой сущностей</p>
+        <p className="mt-2 text-sm text-zinc-400">
+          Поверх сырых заметок автоматически строятся сущности `люди / проекты / идеи / задачи`, а также связи `сущность → заметка` и `сущность ↔ сущность`.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs text-zinc-300">
+          <span className="rounded-full border border-zinc-700 bg-zinc-900/60 px-3 py-1">Сущностей: {props.entityMap.entities.length}</span>
+          <span className="rounded-full border border-zinc-700 bg-zinc-900/60 px-3 py-1">Связей к заметкам: {props.entityMap.noteLinks.length}</span>
+          <span className="rounded-full border border-zinc-700 bg-zinc-900/60 px-3 py-1">Связей между сущностями: {props.entityMap.relations.length}</span>
+        </div>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <IncomingEntityBucketCard title="Люди" entities={entityBuckets.person} emptyText="Пока нет устойчиво выделенных людей" />
+        <IncomingEntityBucketCard title="Проекты" entities={entityBuckets.project} emptyText="Пока нет устойчиво выделенных проектов" />
+        <IncomingEntityBucketCard title="Идеи" entities={entityBuckets.idea} emptyText="Пока нет устойчиво выделенных идей" />
+        <IncomingEntityBucketCard title="Задачи" entities={entityBuckets.task} emptyText="Пока нет устойчиво выделенных задач" />
+      </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-semibold text-zinc-100">Главные связи между сущностями</p>
+            <p className="mt-1 text-sm text-zinc-400">Здесь видно, какие проекты подпитывают идеи, а какие задачи завязаны на эти сущности.</p>
+          </div>
+          <p className="text-xs text-zinc-500">Показано: {relationPreview.length}</p>
+        </div>
+        {relationPreview.length === 0 ? (
+          <p className="mt-3 text-sm text-zinc-500">Пока не хватает пересечений между сущностями.</p>
+        ) : (
+          <ul className="mt-3 space-y-2 text-sm text-zinc-200">
+            {relationPreview.map((relation) => {
+              const from = props.entityMap.entities.find((entity) => entity.id === relation.fromEntityId)
+              const to = props.entityMap.entities.find((entity) => entity.id === relation.toEntityId)
+              if (!from || !to) return null
+              return (
+                <li key={`${relation.fromEntityId}-${relation.toEntityId}`} className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2">
+                  <span className="font-medium text-zinc-50">{from.label}</span>
+                  <span className="mx-2 text-zinc-500">→</span>
+                  <span className="font-medium text-zinc-50">{to.label}</span>
+                  <span className="ml-2 text-xs text-zinc-400">{relation.relation} · сила {relation.strength}</span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function IncomingEntityBucketCard(props: { title: string; entities: IncomingEntityCard[]; emptyText: string }) {
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-zinc-100">{props.title}</p>
+        <p className="text-xs text-zinc-500">{props.entities.length}</p>
+      </div>
+      {props.entities.length === 0 ? (
+        <p className="mt-3 text-sm text-zinc-500">{props.emptyText}</p>
+      ) : (
+        <ul className="mt-3 space-y-2">
+          {props.entities.slice(0, 6).map((entity) => (
+            <li key={entity.id} className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-zinc-50">{entity.label}</p>
+                <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[11px] text-zinc-300">{entity.mentions} упоминаний</span>
+              </div>
+              <p className="mt-2 text-sm text-zinc-400">{entity.summary}</p>
+              <p className="mt-2 text-xs text-zinc-500">Заметок: {entity.noteIds.length} · сигналы: {entity.signals.slice(0, 3).join(' · ')}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

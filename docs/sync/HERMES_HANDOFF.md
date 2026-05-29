@@ -25,6 +25,37 @@
 
 ---
 
+## 2026-05-29 06:42 (MSK) — Слой сущностей для incoming: люди / проекты / идеи / задачи
+
+- **Ветка:** `hermes/work` @ `HEAD`
+- **Сделано:**
+  - поверх существующего incoming workspace добавлен derived-слой сущностей: автоматическое выделение `люди / проекты / идеи / задачи` из заметок и seed-видео;
+  - в `web/src/lib/telegramIncomingVisuals.ts` добавлены:
+    - типы `IncomingEntityCard` / `IncomingEntityMap`;
+    - `buildIncomingEntityMap()`;
+    - более жёсткие связи `сущность → заметка` и `сущность ↔ сущность`;
+    - обновлённый graph-layer, который теперь показывает не только source/folder/tag/note, но и `entity_group` / `entity`.
+  - на `web/src/routes/MasterAdminIncomingWorkspace.tsx` добавлена новая вкладка `Сущности` с четырьмя корзинами (`Люди`, `Проекты`, `Идеи`, `Задачи`) и списком главных связей между сущностями.
+  - в `web/src/domain/telegramNotes.ts` зафиксированы типы для сущностей и отношений входящего слоя.
+  - обновлены unit-тесты `web/src/lib/telegramIncomingVisuals.test.ts` под новый entity-layer.
+- **Файлы:**
+  - `web/src/domain/telegramNotes.ts`
+  - `web/src/lib/telegramIncomingVisuals.ts`
+  - `web/src/lib/telegramIncomingVisuals.test.ts`
+  - `web/src/routes/MasterAdminIncomingWorkspace.tsx`
+- **Тесты/проверки:**
+  - `cd web && npm test -- src/lib/telegramIncomingVisuals.test.ts src/store/telegramNotesStore.test.ts` → ok (`14 passed`)
+  - `cd web && npm run build` → ok
+- **Деплой / сервисы:**
+  - прод-контур перепроверен по live-состоянию: `live-model.ru` уже резолвится на этот хост `93.183.71.104`, nginx root — `/var/www/model/web`;
+  - выкладка из этой Hermes-сессии не завершена: у пользователя `hermes` нет записи в `/var/www/model/web`, нет passwordless `sudo`, и нет рабочего SSH-доступа под `deploy`/`root` для локального/удалённого rsync.
+- **Нужно в Cursor:**
+  - визуально проверить новую вкладку `Сущности` на `https://live-model.ru/master-admin/incoming`, когда появится доступ на выкладку;
+  - следующим шагом можно сделать ручное подтверждение/редактирование выделенных сущностей и сохранение связей в store, а не только derived-режим.
+- **Риски:**
+  - текущая модель сущностей эвристическая: она полезна как стартовый жёсткий слой, но пока без ручной валидации пользователем;
+  - деплой-скрипт/доки всё ещё могут указывать на старый контур, поэтому перед следующей выкладкой стоит актуализировать infra-paths.
+
 ## 2026-05-28 23:26 (MSK) — Визуализация incoming + seed последнего Hermes-видео
 
 - **Ветка:** `hermes/work` @ `HEAD`
