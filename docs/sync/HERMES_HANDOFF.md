@@ -25,6 +25,39 @@
 
 ---
 
+## 2026-05-31 17:23 (MSK) — Семейный календарь: день / неделя / месяц / год
+
+- **Ветка:** `hermes/work` @ `HEAD`
+- **Сделано:**
+  - добавлен новый раздел `Семейный календарь` в Мастер-админ (`/master-admin/family`);
+  - собран локальный каркас семейного планирования с четырьмя горизонтами: `день / неделя / месяц / год`;
+  - в доменной модели `web/src/domain/familyPlanning.ts` описаны участники, цели, задачи и календарные события;
+  - в `web/src/lib/familyPlanning.ts` добавлены seed-данные для старта, summary-карточки, группировка по горизонтам и циклы статусов;
+  - в `web/src/store/familyPlanningStore.ts` добавлен persist-store (`model-family-calendar-v1`) с переключением фокуса горизонта, переключением статусов целей/задач и сбросом seed;
+  - экран показывает: роли семьи, общие ритуалы календаря, цели по горизонтам, задачи друг для друга и общий фокус;
+  - навигация `MASTER_ADMIN_NAV` и маршруты `AppRoutes.tsx` обновлены под новый раздел.
+- **Файлы:**
+  - `web/src/AppRoutes.tsx`
+  - `web/src/lib/appPaths.ts`
+  - `web/src/domain/familyPlanning.ts`
+  - `web/src/lib/familyPlanning.ts`
+  - `web/src/lib/familyPlanning.test.ts`
+  - `web/src/store/familyPlanningStore.ts`
+  - `web/src/store/familyPlanningStore.test.ts`
+  - `web/src/routes/MasterAdminFamilyWorkspace.tsx`
+- **Тесты/проверки:**
+  - `cd web && npm test -- src/lib/familyPlanning.test.ts src/store/familyPlanningStore.test.ts` → ok (`4 passed`)
+  - `cd web && npm run build` → ok
+- **Деплой / сервисы:**
+  - live-контур перепроверен: `live-model.ru` резолвится на `93.183.71.104`, nginx знает этот домен;
+  - попытка выкладки `DEPLOY_HOST=93.183.71.104 SKIP_API=1 ./scripts/deploy/deploy.sh` не завершилась: `root@93.183.71.104: Permission denied (publickey,password)`.
+- **Нужно в Cursor:**
+  - визуально проверить `/master-admin/family`, когда появится рабочий deploy-доступ;
+  - следующим шагом можно добавить ручное редактирование целей/задач/событий прямо из UI и экспорт/импорт семейного плана в JSON.
+- **Риски:**
+  - пока это seed-каркас и persist в браузере, без серверной синхронизации между устройствами;
+  - текущий deploy-скрипт и права доступа всё ещё не дают выкатить UI из Hermes-среды на live.
+
 ## 2026-05-29 06:42 (MSK) — Слой сущностей для incoming: люди / проекты / идеи / задачи
 
 - **Ветка:** `hermes/work` @ `HEAD`

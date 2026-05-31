@@ -11,6 +11,7 @@ import { MasterAdminEnvironmentWorkspace } from './routes/MasterAdminEnvironment
 import { MasterAdminOverviewWorkspace } from './routes/MasterAdminOverviewWorkspace'
 import { MasterAdminHermesWorkspace } from './routes/MasterAdminHermesWorkspace'
 import { MasterAdminIncomingWorkspace } from './routes/MasterAdminIncomingWorkspace'
+import { MasterAdminFamilyWorkspace } from './routes/MasterAdminFamilyWorkspace'
 import { MasterAdminPhilosophyWorkspace } from './routes/MasterAdminPhilosophyWorkspace'
 import { MasterAdminUsersWorkspace } from './routes/MasterAdminUsersWorkspace'
 import { OrchestraWorkspace } from './routes/OrchestraWorkspace'
@@ -40,6 +41,7 @@ export function AppRoutes() {
           <Route path="philosophy" element={<MasterAdminPhilosophyWorkspace />} />
           <Route path="hermes" element={<MasterAdminHermesWorkspace />} />
           <Route path="incoming" element={<MasterAdminIncomingWorkspace />} />
+          <Route path="family" element={<MasterAdminFamilyWorkspace />} />
           <Route path="advanced" element={<AdvancedSettingsShell />}>
             <Route index element={<StreamWorkspace />} />
             <Route path="structures" element={<PromptStructuresWorkspace />} />
