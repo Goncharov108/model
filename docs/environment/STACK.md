@@ -6,7 +6,7 @@ Monorepo **model**: `web/` + `api/`.
 
 | Слой | Технология | Версия | Где | Заметка |
 |------|------------|--------|-----|---------|
-| ОС | Ubuntu | 24.04 LTS | VPS ztv NL-8 | 104.171.141.49 |
+| ОС | Ubuntu | 24.04 LTS | VPS RU-8 (prod) | 93.183.71.104 |
 | Web (статика) | Vite build → HTML/JS/CSS | из коммита main | `/var/www/model/web` | nginx |
 | API | Node `http` placeholder | server.mjs | `/opt/model/api` | systemd, :3847 |
 | Прокси | nginx | 1.24 | `/etc/nginx/sites-available/model` | `/api/` → backend |

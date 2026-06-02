@@ -2,9 +2,9 @@
 # Скачивает с VPS состояние репо Hermes и журнал передачи для работы в Cursor.
 set -euo pipefail
 
-VPS="${HERMES_VPS:-root@104.171.141.49}"
+VPS="${HERMES_VPS:-root@93.183.71.104}"
 SSH_KEY="${HERMES_SSH_KEY:-$HOME/.ssh/id_ed25519}"
-REMOTE_REPO="/home/hermes/vault/Projects/model"
+REMOTE_REPO="${HERMES_REMOTE_REPO:-/home/hermes/work/model}"
 LOCAL_REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT_DIR="$LOCAL_REPO/docs/sync"
 SNAPSHOT="$OUT_DIR/hermes-vps-snapshot.txt"

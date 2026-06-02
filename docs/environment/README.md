@@ -26,5 +26,5 @@
 ## Кратко (2026-05-15)
 
 - GitHub: **Goncharov108/model** (private), CI зелёный
-- VPS: **104.171.141.49** (ztv NL-8-NVMe), сайт по IP работает
+- VPS: **93.183.71.104** (RU-8, prod **live-model.ru**). Старый **104.171.141.49** — архив.
 - Домен: **live-model.ru** — DNS на reg.ru ещё на старый IP

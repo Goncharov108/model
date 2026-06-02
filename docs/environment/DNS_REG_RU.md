@@ -1,45 +1,35 @@
-# Домен (reg.ru)
+# DNS: live-model.ru (reg.ru)
 
-| Поле | Значение |
-|------|----------|
-| Домен | **live-model.ru** |
-| Регистратор | reg.ru |
-| SSL | после certbot (DNS ещё не на VPS — см. STATUS.md) |
+**Актуальный prod IP:** **93.183.71.104** (RU-8 VPS).
 
-## DNS (записать в панели reg.ru)
+Старый NL VPS **104.171.141.49** — архив, записи на него снять.
+
+## Записи (reg.ru)
 
 | Имя | Тип | Значение |
 |-----|-----|----------|
-| `@` | **A** | **104.171.141.49** |
-| `www` | **A** | **104.171.141.49** |
-| `hermes` | **A** | **104.171.141.49** *(опционально: короткий URL `https://hermes.live-model.ru/`)* |
+| `@` | **A** | **93.183.71.104** |
+| `www` | **A** | **93.183.71.104** |
+| `hermes` | **A** | **93.183.71.104** *(опционально: `https://hermes.live-model.ru/`)* |
 
-*(или `www` → CNAME → `live-model.ru`)*
-
-TTL: 300–3600; обновление обычно от нескольких минут до 24 ч.
-
-Проверка с Mac:
+## Проверка
 
 ```bash
-dig +short live-model.ru A
-dig +short www.live-model.ru A
+dig +short live-model.ru @8.8.8.8
+dig +short www.live-model.ru @8.8.8.8
 ```
 
-Ожидается: `104.171.141.49`
+Ожидается: **93.183.71.104**
 
-**2026-05-15:** A-записи `@` и `www` → `104.171.141.49` **выставлены в reg.ru** (подтверждено владельцем). Распространение: пока у резолверов 8.8.8.8 / 1.1.1.1 ещё `31.31.198.113` — подождать 15 мин–24 ч. Если есть **AAAA** на старый хостинг — удалить или отключить, иначе Let's Encrypt может идти по IPv6 и certbot упадёт.
+Если есть **AAAA** на старый хостинг — удалить или отключить, иначе Let's Encrypt может идти по IPv6 и certbot упадёт.
 
-## SSL (Let's Encrypt)
+## HTTPS
 
-На сервере после nginx (см. [DEPLOY.md](./DEPLOY.md)):
+После DNS:
 
 ```bash
-sudo certbot --nginx -d live-model.ru -d www.live-model.ru
+ssh -i ~/.ssh/id_ed25519 root@93.183.71.104
+certbot --nginx -d live-model.ru -d www.live-model.ru
 ```
 
-Проверка:
-
-```bash
-curl -I https://live-model.ru
-curl https://live-model.ru/api/health
-```
+Или автоматически при `./scripts/deploy/deploy.sh` с `DEPLOY_NGINX=1` (см. `DEPLOY.md`).

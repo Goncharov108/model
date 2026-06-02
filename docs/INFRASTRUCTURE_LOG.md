@@ -1,8 +1,22 @@
 # Журнал инфраструктуры и деплоя (май 2026)
 
-Хроника работ по репозиторию **model**: GitHub, VPS ztv.su, домен live-model.ru, вкладка «Окружение» в Мастер-админе. **Без секретов** — пароли только в `private/`.
+Хроника работ по репозиторию **model**: GitHub, VPS, домен live-model.ru, вкладка «Окружение» в Мастер-админе. **Без секретов** — пароли только в `private/`.
 
-## Итоговое состояние
+## Актуально (prod, 2026-05)
+
+| Компонент | Статус |
+|-----------|--------|
+| Prod VPS | **93.183.71.104** (RU-8), Ubuntu 24.04 |
+| Сайт | https://live-model.ru/ — SPA + HTTPS |
+| API | https://live-model.ru/api/health |
+| Hermes клон | `/home/hermes/work/model`, ветка `hermes/work` |
+| Деплой с Mac | `./scripts/deploy/deploy.sh` |
+
+Старый NL VPS **104.171.141.49** — **архив** (ниже в журнале — исторические записи).
+
+---
+
+## Итоговое состояние (архив NL, май 2026)
 
 | Компонент | Статус |
 |-----------|--------|
@@ -57,11 +71,9 @@ Workflow **CI**: lint, test, build (`web/`), api-smoke.
 ## Файлы для повторного деплоя
 
 ```bash
-# с Mac (ключ ~/.ssh/id_ed25519)
-cd web && npm run build
-scp -r dist/* root@104.171.141.49:/var/www/model/web/
-scp api/server.mjs api/package.json root@104.171.141.49:/opt/model/api/
-ssh root@104.171.141.49 'systemctl restart model-api && systemctl reload nginx'
+# с Mac (актуально)
+./scripts/deploy/deploy.sh
+# или см. docs/environment/DEPLOY.md
 ```
 
 ## Правила проекта

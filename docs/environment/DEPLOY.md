@@ -57,11 +57,69 @@ DEPLOY_HOST=93.183.71.104 ./scripts/deploy/fix-hermes-codex-runtime.sh
 - перезапускает `hermes-gateway`;
 - делает smoke-test от пользователя `hermes`.
 
+## Деплой с VPS (Hermes, пользователь `hermes`)
+
+Hermes работает **на том же сервере**, что и prod. SSH на `root@93.183.71.104` **не нужен** — нужен локальный скрипт и права на каталоги.
+
+| Что | Значение |
+|-----|----------|
+| Клон репо | `/home/hermes/work/model` |
+| Ветка | `hermes/work` |
+| Prod UI | `/var/www/model/web` |
+| Prod API | `/opt/model/api` |
+| Проверка UI | `https://live-model.ru/` |
+
+### Однократно (root на сервере)
+
+После обновления репо или копирования скрипта:
+
+```bash
+bash /home/hermes/work/model/scripts/deploy/setup-hermes-deploy-access.sh
+```
+
+Делает: `hermes` → группа `deploy`, групповая запись в `/var/www/model` и `/opt/model/api`, ограниченный sudo для `model-api` и `nginx reload`.
+
+**SSH-ключ Hermes → `deploy`** (один раз, root): публичный ключ `hermes` в `/home/deploy/.ssh/authorized_keys`. Проверка от пользователя `hermes`:
+
+```bash
+ssh -o BatchMode=yes deploy@93.183.71.104 'echo ok'
+```
+
+После `ok` Hermes может при необходимости вызывать `deploy.sh` с `DEPLOY_USER=deploy` и `SSH_KEY=~/.ssh/id_ed25519`; для UI на том же VPS проще **`deploy-on-vps.sh`** (без SSH).
+
+### Каждая выкладка UI (от пользователя `hermes`)
+
+```bash
+cd /home/hermes/work/model
+git pull origin hermes/work   # если нужны свежие коммиты
+./scripts/deploy/deploy-on-vps.sh
+```
+
+Только статика (по умолчанию API не трогаем):
+
+```bash
+SKIP_API=1 ./scripts/deploy/deploy-on-vps.sh
+```
+
+С API (если менялся `api/`):
+
+```bash
+SKIP_API=0 ./scripts/deploy/deploy-on-vps.sh
+```
+
+**Задача по UI не закрыта**, пока скрипт не завершился успешно и в ответе есть URL `https://live-model.ru/`. Фразы «код готов, деплoy позже» без блокера доступа — только если `setup-hermes-deploy-access.sh` ещё не запускали.
+
+### Чего Hermes не делает без root/Cursor
+
+- `DEPLOY_NGINX=1` / certbot / правка `/etc/nginx` — только через Cursor или root
+- `fix-hermes-codex-runtime.sh` — патчи пакета Hermes, обычно Cursor/root
+- push в `main` без согласия владельца
+
 ## Проверка
 
 ```bash
-curl -s http://104.171.141.49/api/health
-curl -s -X POST http://104.171.141.49/api/v1/text/inspect \
+curl -s https://live-model.ru/api/health
+curl -s -X POST https://live-model.ru/api/v1/text/inspect \
   -H 'Content-Type: application/json' \
   -d '{"text":"проверка после деплоя"}'
 ```
@@ -75,10 +133,12 @@ curl -s -X POST http://104.171.141.49/api/v1/text/inspect \
 | `scripts/deploy/nginx-model.conf` | Виртуальный хост |
 | `scripts/deploy/model-api.service` | systemd unit API |
 | `scripts/deploy/hermes-dashboard.service` | systemd Hermes |
+| `scripts/deploy/setup-hermes-deploy-access.sh` | Права hermes на prod (один раз, root) |
+| `scripts/deploy/deploy-on-vps.sh` | Выкладка с VPS без SSH |
 
 ## Hermes (Telegram) и Git
 
-- На VPS клон: `/home/hermes/vault/Projects/model`, ветка **`hermes/work`**
+- На VPS клон: `/home/hermes/work/model`, ветка **`hermes/work`**
 - Deploy key **hermes-vps-deploy** → push в `origin/hermes/work`
 - В Cursor: `./scripts/sync/pull-hermes-from-vps.sh`, журнал `docs/sync/HERMES_HANDOFF.md`
 

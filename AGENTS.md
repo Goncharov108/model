@@ -3,8 +3,8 @@
 Репозиторий **model** — веб-интерфейс (`web/`), API (`api/`), документация (`docs/`), свод законов `SWOD_ZAKONOV.txt`.
 
 - **Секреты:** только `private/` локально у владельца, не в Git.
-- **Деплой статики:** `web/dist` → VPS `/var/www/model/web/`.
-- **Hermes на сервере:** рабочая копия — `/home/hermes/vault/Projects/model` (клон этого репо).
+- **Деплой статики:** `web/dist` → VPS `/var/www/model/web/` (Mac: `scripts/deploy/deploy.sh`; Hermes на VPS: `scripts/deploy/deploy-on-vps.sh`, см. `docs/environment/DEPLOY.md`).
+- **Hermes на сервере:** рабочая копия — `/home/hermes/work/model` (клон этого репо, ветка `hermes/work`). Старый путь `/home/hermes/vault/Projects/model` — не использовать.
 
 ## Два агента, одна репа
 

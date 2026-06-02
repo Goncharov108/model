@@ -1,21 +1,31 @@
-# Статус окружения model (2026-05-15)
+# Статус окружения model
 
 Обновлять после деплоя и смены DNS.
 
-## Продакшен
+## Продакшен (актуально)
 
 | Проверка | Ожидание | Сейчас |
 |----------|----------|--------|
-| `curl -s -o /dev/null -w "%{http_code}" http://104.171.141.49/` | 200 | ✅ |
-| `curl -s http://104.171.141.49/api/health` | `{"ok":true,...}` | ✅ |
-| `dig +short live-model.ru @8.8.8.8` | 104.171.141.49 | ⏳ в панели reg.ru готово; публичный DNS ещё 31.31.198.113 |
-| `curl -I https://live-model.ru` | 200/301 | ⏳ после распространения DNS + повтор certbot |
+| `curl -s -o /dev/null -w "%{http_code}" https://live-model.ru/` | 200 | ✅ |
+| `curl -s https://live-model.ru/api/health` | `{"ok":true,...}` | ✅ |
+| `dig +short live-model.ru @8.8.8.8` | 93.183.71.104 | проверять при смене DNS |
+| Prod VPS | **93.183.71.104** (RU-8), Ubuntu 24.04 | ✅ |
+
+Старый NL VPS **104.171.141.49** — архив, не использовать.
 
 ## Репозиторий
 
 - URL: https://github.com/Goncharov108/model
-- Ветка: `main`
+- Ветки: `main`, `hermes/work`, feature-ветки Cursor
 - CI: зелёный на push
+
+## Hermes на VPS
+
+| Параметр | Значение |
+|----------|----------|
+| Клон | `/home/hermes/work/model` |
+| Ветка | `hermes/work` |
+| Handoff | `docs/sync/HERMES_HANDOFF.md` |
 
 ## Секреты (где лежат)
 
@@ -27,6 +37,6 @@
 
 ## Следующий шаг
 
-1. reg.ru: A-записи на **104.171.141.49**
-2. `certbot --nginx -d live-model.ru -d www.live-model.ru` на сервере
-3. Обновить SSL-поля во вкладке «Окружение» и в [DNS_REG_RU.md](./DNS_REG_RU.md)
+1. Деплой UI: `./scripts/deploy/deploy.sh` из корня репо
+2. Синхронизация с Hermes: `./scripts/sync/pull-hermes-from-vps.sh`
+3. Проверка в браузере: `https://live-model.ru/master-admin/` (**Cmd+Shift+R**)

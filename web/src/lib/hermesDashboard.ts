@@ -11,4 +11,4 @@ export function getHermesDashboardUrl(): string {
 
 /** SSH-туннель для локальной разработки без nginx на VPS. */
 export const HERMES_SSH_TUNNEL_HINT =
-  'ssh -N -L 9119:127.0.0.1:9119 -i ~/.ssh/id_ed25519 root@104.171.141.49'
+  'ssh -N -L 9119:127.0.0.1:9119 -i ~/.ssh/id_ed25519 root@93.183.71.104'

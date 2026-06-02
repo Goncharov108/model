@@ -389,7 +389,7 @@ export const PHILOSOPHY_VECTORS_SEED: PhilosophyVector[] = [
     status: 'fixed',
     lawRef: 'SWOD §15',
     bullets: [
-      'Сборка → dist на 104.171.141.49 → прямой URL в ответе.',
+      'Сборка → dist на prod (93.183.71.104 / live-model.ru) → прямой URL в ответе.',
       'Cmd+Shift+R при подозрении на кэш.',
     ],
     linksTo: ['philosopher-chat', 'ui-truth-local'],

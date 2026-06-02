@@ -28,13 +28,13 @@ export function createDefaultEnvironmentDocs(): EnvironmentDocsData {
     domain: {
       domainName: 'live-model.ru',
       dnsRecords:
-        '@ → A 104.171.141.49\nwww → A 104.171.141.49 (или CNAME на live-model.ru)',
+        '@ → A 93.183.71.104\nwww → A 93.183.71.104 (или CNAME на live-model.ru)',
       sslStatus: 'не выпущен (после nginx + certbot)',
       sslCheckedAt: '',
       notes: 'Регистратор reg.ru. A-запись — когда будет IP VPS.',
     },
     server: {
-      host: '104.171.141.49',
+      host: '93.183.71.104',
       os: 'Ubuntu 24.04 LTS (ztv NL-8-NVMe)',
       sshUser: 'root → затем deploy',
       deployWebPath: '/var/www/model/web',
