@@ -6,6 +6,10 @@ export type TelegramNoteState = 'inbox' | 'in_work' | 'archived'
 
 export type TelegramNoteFolder = 'ideas' | 'work' | 'finance' | 'media' | 'misc'
 
+export type TelegramIncomingEntityKind = 'person' | 'project' | 'idea' | 'task'
+
+export type TelegramIncomingRelationKind = 'mentions' | 'drives' | 'depends_on' | 'supports'
+
 export interface TelegramNoteItem {
   id: string
   dateIso: string
@@ -37,4 +41,18 @@ export interface TelegramRoutingRuleSet {
   priorityToState: Record<TelegramNotePriority, TelegramNoteState>
   folderToState: Partial<Record<TelegramNoteFolder, TelegramNoteState>>
   defaultState: TelegramNoteState
+}
+
+export interface TelegramIncomingEntityLink {
+  entityId: string
+  noteId: string
+  relation: TelegramIncomingRelationKind
+  strength: number
+}
+
+export interface TelegramIncomingEntityRelation {
+  fromEntityId: string
+  toEntityId: string
+  relation: TelegramIncomingRelationKind
+  strength: number
 }

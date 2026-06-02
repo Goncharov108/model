@@ -424,7 +424,7 @@ export const useTelegramNotesStore = create<TelegramNotesStoreState>()(
     }),
     {
       name: 'model-telegram-notes-v1',
-      partialize: (state) => ({
+      partialize: (state: TelegramNotesStoreState) => ({
         snapshot: state.snapshot,
         routingPresets: state.routingPresets,
         activePresetId: state.activePresetId,

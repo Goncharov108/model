@@ -12,6 +12,7 @@ export const PATH = {
     hermes: '/master-admin/hermes',
     incoming: '/master-admin/incoming',
     calendar: '/master-admin/calendar',
+    family: '/master-admin/family',
     advanced: {
       root: '/master-admin/advanced',
       stream: '/master-admin/advanced',
@@ -68,6 +69,7 @@ export const MASTER_ADMIN_NAV = [
   { to: PATH.masterAdmin.hermes, label: 'Hermes' },
   { to: PATH.masterAdmin.incoming, label: 'Входящий поток' },
   { to: PATH.masterAdmin.calendar, label: 'Календарь' },
+  { to: PATH.masterAdmin.family, label: 'Семейный календарь' },
   { to: PATH.masterAdmin.advanced.root, label: 'Продвинутые настройки' },
 ] as const
 

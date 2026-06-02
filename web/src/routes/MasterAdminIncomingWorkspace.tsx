@@ -9,6 +9,20 @@ import type {
 } from '../domain/telegramNotes'
 import type { TelegramNotesStoreState } from '../store/telegramNotesStore'
 import { readTextFile } from '../lib/readTextFile'
+import {
+  buildIncomingClusters,
+  buildIncomingEntityMap,
+  buildIncomingGraphData,
+  buildIncomingInsights,
+  buildIncomingTimeline,
+  createHermesVideoSeedSnapshot,
+  type IncomingClusterCard,
+  type IncomingEntityCard,
+  type IncomingEntityMap,
+  type IncomingGraphData,
+  type IncomingInsightCard,
+  type IncomingTimelineBucket,
+} from '../lib/telegramIncomingVisuals'
 import { countByGroup, parseTelegramNotesExport } from '../lib/telegramNotes'
 import { useTelegramNotesStore } from '../store/telegramNotesStore'
 import { AppButton } from '../ui/AppButton'
@@ -52,6 +66,15 @@ const FOLDER_LABEL: Record<TelegramNoteFolder, string> = {
 function useNotesStore<T>(selector: (s: TelegramNotesStoreState) => T): T {
   return useTelegramNotesStore(selector)
 }
+
+const VISUAL_TABS = [
+  { id: 'graph', label: 'Граф' },
+  { id: 'timeline', label: 'Таймлайн' },
+  { id: 'clusters', label: 'Кластеры' },
+  { id: 'entities', label: 'Сущности' },
+] as const
+
+type VisualTabId = (typeof VISUAL_TABS)[number]['id']
 
 export function MasterAdminIncomingWorkspace() {
   const snapshot = useNotesStore((s) => s.snapshot)
@@ -97,6 +120,7 @@ export function MasterAdminIncomingWorkspace() {
   const [pendingImportPayload, setPendingImportPayload] = useState<string | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importDialogDescription, setImportDialogDescription] = useState('')
+  const [visualTab, setVisualTab] = useState<VisualTabId>('graph')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -161,6 +185,17 @@ export function MasterAdminIncomingWorkspace() {
   useEffect(() => {
     setPresetName(activePreset?.name ?? '')
   }, [activePreset?.id, activePreset?.name])
+
+  useEffect(() => {
+    if (snapshot) return
+    setSnapshot(createHermesVideoSeedSnapshot())
+  }, [setSnapshot, snapshot])
+
+  const graphData = useMemo(() => buildIncomingGraphData(snapshot, filteredItems), [filteredItems, snapshot])
+  const timeline = useMemo(() => buildIncomingTimeline(filteredItems), [filteredItems])
+  const insights = useMemo(() => buildIncomingInsights(filteredItems), [filteredItems])
+  const clusters = useMemo(() => buildIncomingClusters(filteredItems), [filteredItems])
+  const entityMap = useMemo(() => buildIncomingEntityMap(filteredItems), [filteredItems])
 
   async function handleImport(file: File) {
     setBusy(true)
@@ -247,6 +282,9 @@ export function MasterAdminIncomingWorkspace() {
             />
           </label>
           <div className="flex gap-2">
+            <AppButton type="button" variant="ghost" onClick={() => setSnapshot(createHermesVideoSeedSnapshot())} disabled={busy}>
+              Загрузить seed-видео
+            </AppButton>
             <AppButton type="button" variant="ghost" onClick={() => applyAutoRouting()} disabled={!snapshot || busy}>
               Массовая сортировка
             </AppButton>
@@ -290,6 +328,41 @@ export function MasterAdminIncomingWorkspace() {
         <StatChip label={FOLDER_LABEL.media} value={folderCounters.media} />
         <StatChip label={FOLDER_LABEL.misc} value={folderCounters.misc} />
       </div>
+
+      <SurfaceCard
+        title="Карта входящего потока"
+        description="Визуальный слой для /master-admin/incoming: граф сущностей, таймлайн и кластеры. Сейчас уже подмешан seed из последнего видео про Hermes Agent."
+      >
+        <div className="mt-4 grid gap-3 lg:grid-cols-4">
+          {insights.map((card) => (
+            <InsightCardView key={card.title} card={card} />
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {VISUAL_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setVisualTab(tab.id)}
+              className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                visualTab === tab.id
+                  ? 'border-violet-500/70 bg-violet-500/15 text-violet-100'
+                  : 'border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:border-violet-500/40'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4">
+          {visualTab === 'graph' ? <IncomingGraphPanel data={graphData} /> : null}
+          {visualTab === 'timeline' ? <IncomingTimelinePanel timeline={timeline} /> : null}
+          {visualTab === 'clusters' ? <IncomingClustersPanel clusters={clusters} /> : null}
+          {visualTab === 'entities' ? <IncomingEntitiesPanel entityMap={entityMap} /> : null}
+        </div>
+      </SurfaceCard>
 
       <SurfaceCard title="Фильтр и поиск">
         <div className="mt-4 grid gap-3 lg:grid-cols-4">
@@ -749,6 +822,222 @@ function StatChip(props: { label: string; value: number }) {
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
       <p className="text-xs text-zinc-500">{props.label}</p>
       <p className="mt-1 text-xl font-semibold text-zinc-50">{props.value}</p>
+    </div>
+  )
+}
+
+function InsightCardView(props: { card: IncomingInsightCard }) {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+      <p className="text-xs text-zinc-500">{props.card.title}</p>
+      <p className="mt-2 text-lg font-semibold text-zinc-50">{props.card.value}</p>
+      <p className="mt-2 text-sm text-zinc-400">{props.card.description}</p>
+    </div>
+  )
+}
+
+function IncomingGraphPanel(props: { data: IncomingGraphData }) {
+  const { data } = props
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold text-zinc-100">Граф сущностей и маршрутизации</p>
+          <p className="text-xs text-zinc-500">Источник → папки → теги → конкретные элементы. Без внешней библиотеки: лёгкий встроенный graph-layer.</p>
+        </div>
+        <p className="text-xs text-zinc-500">Узлов: {data.nodes.length} · связей: {data.edges.length}</p>
+      </div>
+      <div className="relative h-[520px] overflow-hidden rounded-2xl border border-zinc-800 bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.16),_rgba(24,24,27,0.92)_55%)]">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          {data.edges.map((edge) => {
+            const from = data.nodes.find((node) => node.id === edge.from)
+            const to = data.nodes.find((node) => node.id === edge.to)
+            if (!from || !to) return null
+            return (
+              <line
+                key={`${edge.from}-${edge.to}`}
+                x1={from.x}
+                y1={from.y}
+                x2={to.x}
+                y2={to.y}
+                stroke="rgba(167,139,250,0.35)"
+                strokeWidth="0.35"
+              />
+            )
+          })}
+        </svg>
+        {data.nodes.map((node) => {
+          const sizeClass =
+            node.size === 'lg'
+              ? 'w-44 min-h-24'
+              : node.size === 'md'
+                ? 'w-36 min-h-20'
+                : 'w-32 min-h-16'
+          const kindClass =
+            node.kind === 'source'
+              ? 'border-violet-400/80 bg-violet-500/20'
+              : node.kind === 'folder'
+                ? 'border-sky-400/70 bg-sky-500/10'
+                : node.kind === 'entity_group'
+                  ? 'border-amber-400/70 bg-amber-500/10'
+                  : node.kind === 'entity'
+                    ? 'border-fuchsia-400/70 bg-fuchsia-500/10'
+                    : node.kind === 'tag'
+                      ? 'border-emerald-400/60 bg-emerald-500/10'
+                      : 'border-zinc-700 bg-zinc-900/85'
+          return (
+            <div
+              key={node.id}
+              className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl border px-3 py-2 shadow-lg shadow-black/30 ${sizeClass} ${kindClass}`}
+              style={{ left: `${node.x}%`, top: `${node.y}%` }}
+            >
+              <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">{node.kind}</p>
+              <p className="mt-1 text-sm font-medium text-zinc-50">{node.label}</p>
+              {node.meta ? <p className="mt-1 text-xs text-zinc-300">{node.meta}</p> : null}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function IncomingTimelinePanel(props: { timeline: IncomingTimelineBucket[] }) {
+  if (props.timeline.length === 0) {
+    return <p className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 text-sm text-zinc-500">Нет данных для таймлайна.</p>
+  }
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-2">
+      {props.timeline.map((bucket) => (
+        <div key={bucket.isoDay} className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold text-zinc-100">{bucket.label}</p>
+              <p className="text-xs text-zinc-500">{bucket.count} элементов</p>
+            </div>
+            <div className="h-3 w-3 rounded-full bg-violet-400 shadow-[0_0_16px_rgba(167,139,250,0.55)]" />
+          </div>
+          <div className="mt-3 space-y-2 border-l border-zinc-800 pl-4">
+            {bucket.highlights.map((highlight, index) => (
+              <div key={`${bucket.isoDay}-${index}`} className="relative rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-sm text-zinc-200">
+                <span className="absolute -left-[1.05rem] top-4 h-2 w-2 rounded-full bg-violet-400" />
+                {highlight}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function IncomingClustersPanel(props: { clusters: IncomingClusterCard[] }) {
+  return (
+    <div className="grid gap-3 lg:grid-cols-2">
+      {props.clusters.map((cluster) => (
+        <div key={cluster.title} className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+          <p className="text-sm font-semibold text-zinc-100">{cluster.title}</p>
+          <p className="mt-2 text-sm text-zinc-400">{cluster.description}</p>
+          <ul className="mt-3 space-y-2 text-sm text-zinc-200">
+            {cluster.bullets.map((bullet) => (
+              <li key={bullet} className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2">
+                {bullet}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function IncomingEntitiesPanel(props: { entityMap: IncomingEntityMap }) {
+  const entityBuckets = {
+    person: props.entityMap.entities.filter((entity) => entity.kind === 'person'),
+    project: props.entityMap.entities.filter((entity) => entity.kind === 'project'),
+    idea: props.entityMap.entities.filter((entity) => entity.kind === 'idea'),
+    task: props.entityMap.entities.filter((entity) => entity.kind === 'task'),
+  }
+
+  const relationPreview = props.entityMap.relations.slice(0, 8)
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+        <p className="text-sm font-semibold text-zinc-100">Жёсткий слой сущностей</p>
+        <p className="mt-2 text-sm text-zinc-400">
+          Поверх сырых заметок автоматически строятся сущности `люди / проекты / идеи / задачи`, а также связи `сущность → заметка` и `сущность ↔ сущность`.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs text-zinc-300">
+          <span className="rounded-full border border-zinc-700 bg-zinc-900/60 px-3 py-1">Сущностей: {props.entityMap.entities.length}</span>
+          <span className="rounded-full border border-zinc-700 bg-zinc-900/60 px-3 py-1">Связей к заметкам: {props.entityMap.noteLinks.length}</span>
+          <span className="rounded-full border border-zinc-700 bg-zinc-900/60 px-3 py-1">Связей между сущностями: {props.entityMap.relations.length}</span>
+        </div>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <IncomingEntityBucketCard title="Люди" entities={entityBuckets.person} emptyText="Пока нет устойчиво выделенных людей" />
+        <IncomingEntityBucketCard title="Проекты" entities={entityBuckets.project} emptyText="Пока нет устойчиво выделенных проектов" />
+        <IncomingEntityBucketCard title="Идеи" entities={entityBuckets.idea} emptyText="Пока нет устойчиво выделенных идей" />
+        <IncomingEntityBucketCard title="Задачи" entities={entityBuckets.task} emptyText="Пока нет устойчиво выделенных задач" />
+      </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-semibold text-zinc-100">Главные связи между сущностями</p>
+            <p className="mt-1 text-sm text-zinc-400">Здесь видно, какие проекты подпитывают идеи, а какие задачи завязаны на эти сущности.</p>
+          </div>
+          <p className="text-xs text-zinc-500">Показано: {relationPreview.length}</p>
+        </div>
+        {relationPreview.length === 0 ? (
+          <p className="mt-3 text-sm text-zinc-500">Пока не хватает пересечений между сущностями.</p>
+        ) : (
+          <ul className="mt-3 space-y-2 text-sm text-zinc-200">
+            {relationPreview.map((relation) => {
+              const from = props.entityMap.entities.find((entity) => entity.id === relation.fromEntityId)
+              const to = props.entityMap.entities.find((entity) => entity.id === relation.toEntityId)
+              if (!from || !to) return null
+              return (
+                <li key={`${relation.fromEntityId}-${relation.toEntityId}`} className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2">
+                  <span className="font-medium text-zinc-50">{from.label}</span>
+                  <span className="mx-2 text-zinc-500">→</span>
+                  <span className="font-medium text-zinc-50">{to.label}</span>
+                  <span className="ml-2 text-xs text-zinc-400">{relation.relation} · сила {relation.strength}</span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function IncomingEntityBucketCard(props: { title: string; entities: IncomingEntityCard[]; emptyText: string }) {
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-zinc-100">{props.title}</p>
+        <p className="text-xs text-zinc-500">{props.entities.length}</p>
+      </div>
+      {props.entities.length === 0 ? (
+        <p className="mt-3 text-sm text-zinc-500">{props.emptyText}</p>
+      ) : (
+        <ul className="mt-3 space-y-2">
+          {props.entities.slice(0, 6).map((entity) => (
+            <li key={entity.id} className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-zinc-50">{entity.label}</p>
+                <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[11px] text-zinc-300">{entity.mentions} упоминаний</span>
+              </div>
+              <p className="mt-2 text-sm text-zinc-400">{entity.summary}</p>
+              <p className="mt-2 text-xs text-zinc-500">Заметок: {entity.noteIds.length} · сигналы: {entity.signals.slice(0, 3).join(' · ')}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
