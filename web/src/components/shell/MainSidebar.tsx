@@ -1,5 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
+import { canAccessAdmin } from '../../lib/authAccess'
 import { MAIN_APP_NAV, PATH } from '../../lib/appPaths'
+import { useAuthStore } from '../../store/authStore'
 import { sidebarNavClass } from '../../ui/sidebarNav'
 import { AccountProfileBlock } from './AccountProfileBlock'
 
@@ -7,6 +9,8 @@ import { AccountProfileBlock } from './AccountProfileBlock'
 export function MainSidebar(props: { onNavigate?: () => void }) {
   const { onNavigate } = props
   const { pathname } = useLocation()
+  const user = useAuthStore((s) => s.user)
+  const showAdmin = canAccessAdmin(user)
 
   return (
     <aside
@@ -50,13 +54,17 @@ export function MainSidebar(props: { onNavigate?: () => void }) {
         >
           Мастер-админ
         </NavLink>
-        <NavLink
-          to={PATH.admin}
-          onClick={onNavigate}
-          className={({ isActive }) => sidebarNavClass(isActive)}
-        >
-          Админ-панель
-        </NavLink>
+        {showAdmin ? (
+          <NavLink
+            to={PATH.adminUsers}
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              sidebarNavClass(isActive || pathname.startsWith(PATH.admin))
+            }
+          >
+            Админ-панель
+          </NavLink>
+        ) : null}
       </div>
     </aside>
   )

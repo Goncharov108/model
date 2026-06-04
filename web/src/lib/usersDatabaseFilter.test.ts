@@ -5,18 +5,22 @@ import { filterAndSortUsers } from './usersDatabaseFilter'
 const sample: AppUser[] = [
   {
     id: '1',
+    email: 'anna@example.com',
     displayName: 'Анна',
     phone: '+7900',
     role: 'developer',
+    roles: ['developer'],
     photoDataUrl: null,
     createdAtIso: '2026-01-01',
     updatedAtIso: '2026-01-02',
   },
   {
     id: '2',
+    email: 'boris@example.com',
     displayName: 'Борис',
     phone: '',
     role: 'guest',
+    roles: ['guest'],
     photoDataUrl: null,
     createdAtIso: '2026-01-01',
     updatedAtIso: '2026-01-03',

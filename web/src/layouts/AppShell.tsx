@@ -9,6 +9,7 @@ import {
   MAIN_SIDEBAR_OFFSET_CLASS,
   MAIN_SIDEBAR_WIDTH_CLASS,
 } from '../components/shell/shellLayout'
+import { RequireAuth } from '../components/auth/RequireAuth'
 import { PATH } from '../lib/appPaths'
 
 /** Оболочка: desktop-меню, мобильный drawer, оверлей Мастер-админ, контент. */
@@ -70,7 +71,9 @@ export function AppShell() {
         className={`flex min-h-svh min-w-0 flex-col outline-none ${MAIN_SIDEBAR_OFFSET_CLASS} ${MAIN_CONTENT_TOP_MOBILE_CLASS}`}
       >
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          <Outlet />
+          <RequireAuth>
+            <Outlet />
+          </RequireAuth>
         </div>
       </main>
     </div>

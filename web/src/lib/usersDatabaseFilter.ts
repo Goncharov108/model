@@ -13,9 +13,11 @@ export function filterAndSortUsers(
     if (!q) return true
     return (
       user.displayName.toLowerCase().includes(q) ||
+      user.email.toLowerCase().includes(q) ||
       user.phone.toLowerCase().includes(q) ||
       user.id.toLowerCase().includes(q) ||
-      user.role.toLowerCase().includes(q)
+      user.role.toLowerCase().includes(q) ||
+      user.roles.some((r) => r.toLowerCase().includes(q))
     )
   })
 
@@ -40,6 +42,14 @@ export function countUsersByRole(users: AppUser[]): Record<AppUserRole, number> 
     viewer: 0,
     guest: 0,
   }
-  for (const user of users) counts[user.role] += 1
+  for (const user of users) {
+    const seen = new Set<AppUserRole>()
+    for (const role of user.roles.length ? user.roles : [user.role]) {
+      if (!seen.has(role)) {
+        counts[role] += 1
+        seen.add(role)
+      }
+    }
+  }
   return counts
 }

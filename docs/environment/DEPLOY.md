@@ -115,6 +115,21 @@ SKIP_API=0 ./scripts/deploy/deploy-on-vps.sh
 - `fix-hermes-codex-runtime.sh` — патчи пакета Hermes, обычно Cursor/root
 - push в `main` без согласия владельца
 
+## Google-вход (аккаунт владельца)
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → **OAuth client ID** (Web).
+2. **Authorized JavaScript origins:** `https://live-model.ru`, `http://localhost:5173`
+3. Скопируйте **Client ID** и **Client secret** в:
+   - сервер `/opt/model/api/.env`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `OWNER_EMAILS=ваш@gmail.com`
+   - локально `web/.env.local`: `VITE_GOOGLE_CLIENT_ID` (тот же ID)
+4. В клиенте OAuth → **Authorized redirect URIs:** `https://live-model.ru` (без пути в конце)
+5. Перезапуск API: `systemctl restart model-api`
+6. Выкладка UI: `./scripts/deploy/deploy.sh` или Hermes `deploy-on-vps.sh`
+
+Вход идёт **в том же окне** (redirect), без всплывающего `gsi/select`, который часто зависает.
+
+Пока в `OWNER_EMAILS` только ваша почта — вы единственный владелец и разработчик. Список пользователей: **Админ-панель → Пользователи**.
+
 ## Проверка
 
 ```bash

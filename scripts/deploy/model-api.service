@@ -6,8 +6,8 @@ After=network.target
 Type=simple
 User=deploy
 WorkingDirectory=/opt/model/api
+EnvironmentFile=-/opt/model/api/.env
 ExecStart=/usr/bin/node server.mjs
-Environment=PORT=3847
 Restart=on-failure
 RestartSec=3
 

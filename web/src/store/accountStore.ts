@@ -1,53 +1,46 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AccountProfile } from '../domain/appUser'
-import { useUsersDatabaseStore } from './usersDatabaseStore'
 
-const DEFAULT_PROFILE: AccountProfile = {
-  id: 'account-local-owner',
-  displayName: 'Владелец',
+const EMPTY_PROFILE: AccountProfile = {
+  id: '',
+  email: '',
+  displayName: '',
   phone: '',
   photoDataUrl: null,
-  role: 'owner',
-}
-
-function syncAccountToUsers(profile: AccountProfile) {
-  useUsersDatabaseStore.getState().upsertFromAccount(profile)
+  role: 'guest',
+  roles: ['guest'],
+  authProvider: 'none',
 }
 
 interface AccountState {
   profile: AccountProfile
-  patchProfile: (patch: Partial<Omit<AccountProfile, 'id'>>) => void
+  setFromServer: (profile: AccountProfile) => void
+  patchProfile: (patch: Partial<Omit<AccountProfile, 'id' | 'email' | 'roles' | 'authProvider'>>) => void
   setPhoto: (photoDataUrl: string | null) => void
-  registerAsDeveloper: () => void
+  clearSession: () => void
 }
 
 export const useAccountStore = create<AccountState>()(
   persist(
     (set, get) => ({
-      profile: DEFAULT_PROFILE,
+      profile: EMPTY_PROFILE,
+
+      setFromServer: (profile) => set({ profile }),
+
       patchProfile: (patch) => {
-        const profile = { ...get().profile, ...patch }
-        set({ profile })
-        syncAccountToUsers(profile)
+        set({ profile: { ...get().profile, ...patch } })
       },
+
       setPhoto: (photoDataUrl) => {
-        const profile = { ...get().profile, photoDataUrl }
-        set({ profile })
-        syncAccountToUsers(profile)
+        set({ profile: { ...get().profile, photoDataUrl } })
       },
-      registerAsDeveloper: () => {
-        const profile = { ...get().profile, role: 'developer' as const }
-        set({ profile })
-        syncAccountToUsers(profile)
-      },
+
+      clearSession: () => set({ profile: EMPTY_PROFILE }),
     }),
     {
-      name: 'model-account-v1',
+      name: 'model-account-v2',
       partialize: (state) => ({ profile: state.profile }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.profile) syncAccountToUsers(state.profile)
-      },
     },
   ),
 )

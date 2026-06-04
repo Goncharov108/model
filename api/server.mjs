@@ -1,7 +1,19 @@
 import http from 'node:http'
+import { loadAuthConfig } from './lib/authConfig.mjs'
+import { UserStore } from './lib/userStore.mjs'
+import { createAuthHandlers } from './routes/authRoutes.mjs'
 
 const PORT = Number(process.env.PORT) || 3847
 const HOST = process.env.HOST || '127.0.0.1'
+
+const authConfig = loadAuthConfig()
+const userStore = new UserStore({
+  usersFile: authConfig.usersFile,
+  ownerEmails: authConfig.ownerEmails,
+})
+await userStore.init()
+
+const auth = createAuthHandlers(authConfig, userStore)
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode
@@ -45,25 +57,92 @@ function countWords(input) {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (req.method === 'GET' && req.url === '/health') {
-    sendJson(res, 200, { ok: true, service: 'model-api-placeholder', version: '0.2.0' })
+  const url = req.url?.split('?')[0] ?? ''
+
+  if (req.method === 'GET' && url === '/health') {
+    sendJson(res, 200, {
+      ok: true,
+      service: 'model-api',
+      version: '0.3.0',
+      auth: authConfig.authEnabled,
+    })
     return
   }
 
-  // nginx: location /api/ → proxy_pass :3847/ — префикс /api снимается
-  if (req.method === 'POST' && req.url === '/v1/text/inspect') {
+  if (req.method === 'GET' && url === '/v1/auth/config') {
+    await auth.handleAuthConfig(req, res, sendJson)
+    return
+  }
+
+  if (req.method === 'POST' && url === '/v1/auth/google') {
+    await auth.handleAuthGoogle(req, res, sendJson, readJsonBody)
+    return
+  }
+
+  if (req.method === 'POST' && url === '/v1/auth/google/code') {
+    await auth.handleAuthGoogleCode(req, res, sendJson, readJsonBody)
+    return
+  }
+
+  if (req.method === 'POST' && url === '/v1/auth/dev') {
+    await auth.handleAuthDev(req, res, sendJson, readJsonBody)
+    return
+  }
+
+  if (req.method === 'GET' && url === '/v1/auth/me') {
+    await auth.handleAuthMe(req, res, sendJson)
+    return
+  }
+
+  if (req.method === 'POST' && url === '/v1/auth/logout') {
+    await auth.handleAuthLogout(req, res, sendJson)
+    return
+  }
+
+  if (req.method === 'PATCH' && url === '/v1/auth/me') {
+    await auth.handlePatchMe(req, res, sendJson, readJsonBody)
+    return
+  }
+
+  if (req.method === 'GET' && url === '/v1/admin/users') {
+    await auth.handleAdminListUsers(req, res, sendJson)
+    return
+  }
+
+  const userMatch = url.match(/^\/v1\/admin\/users\/([^/]+)$/)
+  if (userMatch) {
+    const userId = decodeURIComponent(userMatch[1])
+    if (req.method === 'PATCH') {
+      await auth.handleAdminUpdateUser(req, res, sendJson, readJsonBody, userId)
+      return
+    }
+    if (req.method === 'DELETE') {
+      await auth.handleAdminDeleteUser(req, res, sendJson, userId)
+      return
+    }
+  }
+
+  if (req.method === 'POST' && url === '/v1/text/inspect') {
     try {
       const body = await readJsonBody(req)
       const text = body?.text
 
       if (typeof text !== 'string') {
-        sendJson(res, 400, { ok: false, error: 'VALIDATION_ERROR', message: 'Поле text обязательно и должно быть строкой.' })
+        sendJson(res, 400, {
+          ok: false,
+          error: 'VALIDATION_ERROR',
+          message: 'Поле text обязательно и должно быть строкой.',
+        })
         return
       }
 
       const trimmed = text.trim()
       if (!trimmed) {
-        sendJson(res, 400, { ok: false, error: 'VALIDATION_ERROR', message: 'Поле text не должно быть пустым.' })
+        sendJson(res, 400, {
+          ok: false,
+          error: 'VALIDATION_ERROR',
+          message: 'Поле text не должно быть пустым.',
+        })
         return
       }
 
@@ -117,5 +196,5 @@ process.on('SIGTERM', () => shutdown('SIGTERM'))
 process.on('SIGINT', () => shutdown('SIGINT'))
 
 server.listen(PORT, HOST, () => {
-  process.stdout.write(`model api placeholder http://${HOST}:${PORT}/health\n`)
+  process.stdout.write(`model api http://${HOST}:${PORT}/health auth=${authConfig.authEnabled}\n`)
 })

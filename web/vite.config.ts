@@ -11,6 +11,11 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
     proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:3847',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '') || '/',
+      },
       '/hermes': {
         target: 'http://127.0.0.1:9119',
         changeOrigin: true,

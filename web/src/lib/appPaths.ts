@@ -3,6 +3,7 @@ export const PATH = {
   home: '/',
   account: '/account',
   admin: '/admin',
+  adminUsers: '/admin/users',
   masterAdmin: {
     root: '/master-admin',
     overview: '/master-admin/overview',
@@ -64,7 +65,6 @@ export const ADVANCED_SETTINGS_NAV = [
 export const MASTER_ADMIN_NAV = [
   { to: PATH.masterAdmin.overview, label: 'Обзор' },
   { to: PATH.masterAdmin.environment, label: 'Окружение' },
-  { to: PATH.masterAdmin.users, label: 'Пользователи' },
   { to: PATH.masterAdmin.philosophy, label: 'Философия' },
   { to: PATH.masterAdmin.hermes, label: 'Hermes' },
   { to: PATH.masterAdmin.incoming, label: 'Входящий поток' },
@@ -72,6 +72,9 @@ export const MASTER_ADMIN_NAV = [
   { to: PATH.masterAdmin.family, label: 'Семейный календарь' },
   { to: PATH.masterAdmin.advanced.root, label: 'Продвинутые настройки' },
 ] as const
+
+/** Вкладки админ-панели. */
+export const ADMIN_PANEL_NAV = [{ to: PATH.adminUsers, label: 'Пользователи', end: true }] as const
 
 /** Вкладки главного бокового меню. */
 export const MAIN_APP_NAV = [{ to: PATH.home, label: 'Главная', end: true }] as const

@@ -3,6 +3,7 @@ import { AdvancedSettingsShell } from './layouts/AdvancedSettingsShell'
 import { AppShell } from './layouts/AppShell'
 import { PATH } from './lib/appPaths'
 import { AdminPanelWorkspace } from './routes/AdminPanelWorkspace'
+import { AdminUsersWorkspace } from './routes/AdminUsersWorkspace'
 import { DomainWorkspace } from './routes/DomainWorkspace'
 import { HelpWorkspace } from './routes/HelpWorkspace'
 import { HomeWorkspace } from './routes/HomeWorkspace'
@@ -33,6 +34,7 @@ export function AppRoutes() {
         <Route index element={<HomeWorkspace />} />
         <Route path="account" element={<AccountSettingsWorkspace />} />
         <Route path="admin" element={<AdminPanelWorkspace />} />
+        <Route path="admin/users" element={<AdminUsersWorkspace />} />
 
         <Route path="master-admin">
           <Route index element={<Navigate to={PATH.masterAdmin.overview} replace />} />
